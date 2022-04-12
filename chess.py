@@ -49,6 +49,6 @@ def print_board(board):
 
 
 if __name__ == "__main__":
-    fen = "8/8/8/4p1K1/2k1P3/8/8/9 b - - 0 1"
+    fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b - - 0 1"
     fen_to_board(fen)
 
