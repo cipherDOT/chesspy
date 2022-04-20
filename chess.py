@@ -1,5 +1,4 @@
 from sys import exit
-from matplotlib.pyplot import pie
 import pygame
 pygame.init()
 
