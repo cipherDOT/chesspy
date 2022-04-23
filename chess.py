@@ -4,14 +4,16 @@ pygame.init()
 
 file = 8
 rank = 8
-width = 800
-height = 800
+width = 400
+height = 400
 rez = width // file
 display = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Chess")
 font = pygame.font.Font("./assets/custom_fonts/Poppins/Poppins-Light.ttf", 24)
 peice_image = pygame.image.load("./assets/pieces.png").convert_alpha()
 
+
+# Code to clip an image to a sub-image
 def clip(surface, x, y, x_size, y_size, _rez):
     handle_surface = surface.copy()
     clipRect = pygame.Rect(x,y,x_size,y_size)
@@ -21,9 +23,20 @@ def clip(surface, x, y, x_size, y_size, _rez):
     return image
 
 
+class Mousefunc(object):
+    def get_pos():
+        _x, _y = pygame.mouse.get_pos()
+        _x = _x // rez
+        _y = _y // rez
+        # print(_x, _y)
+        return (_x, _y)
+
+
+# Color class
 class Color():
     White = (255, 255, 255)
     Black = (0, 0, 0)
+    Yellow = (100, 200, 200)
 
     # chess.com blues theme
     Light = (123,162,192)  # light blue tiles
@@ -35,6 +48,8 @@ class Color():
         Dark : Light
     }
 
+
+# Piece class.
 class Piece():
     # White Pieces
     K = clip(peice_image, 0, 0, 333, 333, rez)
@@ -52,7 +67,9 @@ class Piece():
     r = clip(peice_image, 1333, 333, 333, 333, rez)
     p = clip(peice_image, 1666, 333, 333, 333, rez)
 
-fen_to_peice = {
+# A dictionary the holds the fen
+# and their respective piece 
+FEN_TO_PIECE = {
     # White Pieces
     'K' : Piece.K,
     'Q' : Piece.Q,
@@ -69,7 +86,7 @@ fen_to_peice = {
     'p' : Piece.p
 }
 
-
+# Chess Board class
 class ChessBoard(object):
     def __init__(self, _pos, _fen, _rez):
         self.pos = _pos
@@ -77,13 +94,18 @@ class ChessBoard(object):
         self.rez = _rez
         self.board = [[0 for _ in range(rank)] for _ in range(file)]
         self.board = self.fen_to_board()
+        self.active_square = (-1, -1)
 
 
+    # Draw the chess board
     def draw(self):
+
         for file in range(len(self.board)):
             for rank in range(len(self.board[0])):
                 color = None
-                if (file + rank) % 2 == 0:
+                if file == self.active_square[0] and rank == self.active_square[1]:
+                    color = Color.Yellow
+                elif (file + rank) % 2 == 0:
                     color = Color.Light
                 else:
                     color = Color.Dark
@@ -91,18 +113,22 @@ class ChessBoard(object):
                 pygame.draw.rect(display, color, (
                     rank * self.rez,
                     file * self.rez, 
-                    rank * self.rez + self.rez, 
-                    file * self.rez + self.rez
+                    # rank * self.rez + self.rez, 
+                    # file * self.rez + self.rez
+                    self.rez,
+                    self.rez
                 ))
-
+            
                 state =  str(self.board[file][rank])
                 if state.isalpha():
-                    piece = fen_to_peice[state]
+                    piece = FEN_TO_PIECE[state]
                     display.blit(piece, (rank * self.rez, file * self.rez))
-                else:
-                    blank = font.render(' ', 1, Color.Black)
-                    display.blit(blank, (rank * self.rez, file * self.rez))
+                # else:
+                #     blank = font.render(' ', 1, Color.Black)
+                #     display.blit(blank, (rank * self.rez, file * self.rez))
 
+    # Given a fen string and a 2D board, this function 
+    # will place the pieces in the board accordingly.
     def fen_to_board(self):
         valid = self.fen.count('/') == 7
         if not valid:
@@ -129,19 +155,60 @@ class ChessBoard(object):
 
         return self.board
 
+    def legal_moves(self, piece, x, y):
+        # white pawn
+        moves = []
+        if piece == 'P':
+            if self.board[x - 1][y] == 0:
+                moves.append((x - 1, y))
+            if x == 6:
+                if self.board[x - 2][y] == 0:
+                    moves.append((x - 2, y))
+
+        # black pawn
+        elif piece == 'p':
+            if self.board[x + 1][y] == 0:
+                moves.append((x + 1, y))
+            if x == 1:
+                if self.board[x + 2][y] == 0:
+                    moves.append((x + 2, y))
+
+        else:
+            pass
+        
+        for move in moves:
+            pygame.draw.circle(display, Color.Yellow, [move[1] * rez + rez // 2, move[0] * rez + rez // 2], 8)
+
+# Main Game Loop
 def main():
     run = True
-    initial_fen = "r1b1k1nr/p2p1pNp/n2B4/1p1NP2P/6P1/3P1Q2/P1P1K3/q5b1"
-    chess_board = ChessBoard((0, 0), initial_fen, width // 8)
+    initial_fen = "rnbqkbnr/1ppp1ppp/p/4p/4P/8/PPPP1PPP/RNBQKBNR"
+    chess_board = ChessBoard((0, 0), initial_fen, rez)
+
 
     while run:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
 
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    y, x = Mousefunc.get_pos()
+                    chess_board.active_square = (x, y)
+                elif event.button == 3:
+                    chess_board.active_square = (-1, -1)
+
+
+        main_active_square = chess_board.active_square
+        active_piece = chess_board.board[main_active_square[0]][main_active_square[1]] if main_active_square[0] > -1 else 0
+
         chess_board.draw()
+        chess_board.legal_moves(active_piece, main_active_square[0], main_active_square[1])
+
         pygame.display.flip()
 
+
+# Calling the main game loop
 if __name__ == "__main__":
     main()
 
