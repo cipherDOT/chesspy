@@ -1,3 +1,4 @@
+from ast import Index
 from sys import exit
 import pygame
 pygame.init()
@@ -24,7 +25,7 @@ def clip(surface, x, y, x_size, y_size, _rez):
 
 
 class Mousefunc(object):
-    def get_pos():
+    def get_square():
         _x, _y = pygame.mouse.get_pos()
         _x = _x // rez
         _y = _y // rez
@@ -95,8 +96,10 @@ class ChessBoard(object):
         self.board = [[0 for _ in range(rank)] for _ in range(file)]
         self.board = self.fen_to_board()
         self.active_square = (-1, -1)
+        self.active_piece = 0
 
 
+    # ------------------------------------------------------------------------------------ #
     # Draw the chess board
     def draw(self):
 
@@ -127,6 +130,7 @@ class ChessBoard(object):
                 #     blank = font.render(' ', 1, Color.Black)
                 #     display.blit(blank, (rank * self.rez, file * self.rez))
 
+    # ------------------------------------------------------------------------------------ #
     # Given a fen string and a 2D board, this function 
     # will place the pieces in the board accordingly.
     def fen_to_board(self):
@@ -155,6 +159,33 @@ class ChessBoard(object):
 
         return self.board
 
+    # ------------------------------------------------------------------------------------ #
+
+    def board_to_fen(self):
+        _fen = ''
+
+        for file in range(len(self.board)):
+            count = 0
+            for rank in range(len(self.board[0])):
+                state = self.board[file][rank]
+                if state == 0:
+                    count += 1
+                else:
+                    count = '' if count == 0 else str(count)
+                    _fen += count
+                    count = 0
+                    _fen += state
+
+            if count == 8:
+                _fen += '8'
+            _fen += '/'
+
+        _fen = _fen[:-1]
+
+        return _fen
+
+    # ------------------------------------------------------------------------------------ #
+
     def legal_moves(self, piece, x, y):
         # white pawn
         moves = []
@@ -165,6 +196,20 @@ class ChessBoard(object):
                 if self.board[x - 2][y] == 0:
                     moves.append((x - 2, y))
 
+            try:
+                # if self.board[x - 1][y - 1] != 0 and str(self.board[x - 1][y - 1]).islower():
+                if str(self.board[x - 1][y - 1]).islower():
+                    moves.append((x - 1, y - 1))
+            except IndexError:
+                pass
+
+            try:
+                # if self.board[x - 1][y + 1] != 0 and str(self.board[x - 1][y - 1]).islower():
+                if str(self.board[x - 1][y + 1]).islower():
+                    moves.append((x - 1, y + 1))
+            except IndexError:
+                pass
+
         # black pawn
         elif piece == 'p':
             if self.board[x + 1][y] == 0:
@@ -173,17 +218,60 @@ class ChessBoard(object):
                 if self.board[x + 2][y] == 0:
                     moves.append((x + 2, y))
 
+            try:
+                if str(self.board[x + 1][y - 1]).isupper():
+                    moves.append((x + 1, y - 1))   
+            except IndexError:
+                pass
+
+            try:
+                if str(self.board[x + 1][y + 1]).isupper():
+                    moves.append((x + 1, y + 1)) 
+            except IndexError:
+                pass
+
+        # if piece is 0, do nothing
         else:
             pass
         
-        for move in moves:
-            pygame.draw.circle(display, Color.Yellow, [move[1] * rez + rez // 2, move[0] * rez + rez // 2], 8)
+        return moves
+
+    # ------------------------------------------------------------------------------------ #        
+    # def capture(self, capturing_piece, piece_to_capture):
+    def can_move(self, piece, piece_pos, move_pos):
+        # move_square = self.board[move_pos[0]][move_pos[1]]
+        # if piece == 0:
+        #     return False
+        # elif piece_pos == move_pos:
+        #     return False
+        # elif str(piece).isupper() and str(move_square).isupper():
+        #     return False
+        # elif str(piece).islower() and str(move_square).islower():
+        #     return False
+        
+        # # else:
+        # #     self.board[move_pos[0]][move_pos[1]] = piece
+        
+        # # self.fen = self.board_to_fen()
+        # return True
+        if move_pos in self.legal_moves(piece, piece_pos[0], piece_pos[1]):
+            return True
+
+    def move(self, piece, piece_pos, move_pos):
+        print(piece)
+        self.board[piece_pos[0]][piece_pos[1]] = 0
+        self.board[move_pos[0]][move_pos[1]] = piece
+
+        self.fen = self.board_to_fen()
+        print(self.fen)
 
 # Main Game Loop
 def main():
     run = True
-    initial_fen = "rnbqkbnr/1ppp1ppp/p/4p/4P/8/PPPP1PPP/RNBQKBNR"
+    initial_fen = "rnbqkbnr/1ppp3p/p/4ppp/4PPP/8/PPPP3P/RNBQKBNR"
+    # initial_fen = "rnbqkbnr/1ppp3p/p/4p1p/5PP/8/PPPP3P/RNBQKBNR"
     chess_board = ChessBoard((0, 0), initial_fen, rez)
+    main_active_square = chess_board.active_square
 
 
     while run:
@@ -193,17 +281,36 @@ def main():
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
-                    y, x = Mousefunc.get_pos()
+                    
+                    y, x = Mousefunc.get_square()
                     chess_board.active_square = (x, y)
+                    main_active_square = chess_board.active_square
+                    state = chess_board.board[main_active_square[0]][main_active_square[1]]
+                    if str(state).isupper():
+                        chess_board.active_piece = state
+                    # print(chess_board.active_piece, main_active_square, chess_board.legal_moves(chess_board.active_piece, main_active_square[0], main_active_square[1]))
+                        piece_square = main_active_square
+                    
+                    # print(chess_board.active_piece)
+
+                    if chess_board.active_piece != chess_board.board[chess_board.active_square[0]][chess_board.active_square[1]]:
+                        if chess_board.can_move(chess_board.active_piece, piece_square, main_active_square):
+                            chess_board.move(chess_board.active_piece, piece_square, main_active_square)
+                        chess_board.active_square = (-1, -1)
+                        chess_board.active_piece = 0
                 elif event.button == 3:
                     chess_board.active_square = (-1, -1)
 
 
-        main_active_square = chess_board.active_square
-        active_piece = chess_board.board[main_active_square[0]][main_active_square[1]] if main_active_square[0] > -1 else 0
+        # main_active_square = chess_board.active_square
+        # active_piece = chess_board.board[main_active_square[0]][main_active_square[1]] if main_active_square[0] > -1 else 0
 
         chess_board.draw()
-        chess_board.legal_moves(active_piece, main_active_square[0], main_active_square[1])
+        legal_moves_of_active_piece = chess_board.legal_moves(chess_board.active_piece, main_active_square[0], main_active_square[1])
+        # print(legal_moves_of_active_piece)
+        for move in legal_moves_of_active_piece:
+            pygame.draw.circle(display, Color.Yellow, [move[1] * rez + rez // 2, move[0] * rez + rez // 2], 8)
+
 
         pygame.display.flip()
 
