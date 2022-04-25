@@ -1,4 +1,3 @@
-from ast import Index
 from sys import exit
 import pygame
 pygame.init()
@@ -26,10 +25,9 @@ def clip(surface, x, y, x_size, y_size, _rez):
 
 class Mousefunc(object):
     def get_square():
-        _x, _y = pygame.mouse.get_pos()
+        _y, _x = pygame.mouse.get_pos()
         _x = _x // rez
         _y = _y // rez
-        # print(_x, _y)
         return (_x, _y)
 
 
@@ -39,7 +37,7 @@ class Color():
     Black = (0, 0, 0)
     Yellow = (100, 200, 200)
 
-    # chess.com blues theme
+    # chess.com "blues" theme
     Light = (123,162,192)  # light blue tiles
     Dark = (76,125,165)    # dark blue tiles
     Invert = {
@@ -68,8 +66,15 @@ class Piece():
     r = clip(peice_image, 1333, 333, 333, 333, rez)
     p = clip(peice_image, 1666, 333, 333, 333, rez)
 
-# A dictionary the holds the fen
-# and their respective piece 
+
+class Player(object):
+    def __init__(self, color):
+        self.color = color
+        self.piece_selected = False
+        self.dragging = False
+
+
+# A dictionary the holds the fen and their respective piece 
 FEN_TO_PIECE = {
     # White Pieces
     'K' : Piece.K,
@@ -97,6 +102,8 @@ class ChessBoard(object):
         self.board = self.fen_to_board()
         self.active_square = (-1, -1)
         self.active_piece = 0
+        self.turn_to_move = 0
+        self.player = Player("white")
 
 
     # ------------------------------------------------------------------------------------ #
@@ -116,8 +123,6 @@ class ChessBoard(object):
                 pygame.draw.rect(display, color, (
                     rank * self.rez,
                     file * self.rez, 
-                    # rank * self.rez + self.rez, 
-                    # file * self.rez + self.rez
                     self.rez,
                     self.rez
                 ))
@@ -129,6 +134,9 @@ class ChessBoard(object):
                 # else:
                 #     blank = font.render(' ', 1, Color.Black)
                 #     display.blit(blank, (rank * self.rez, file * self.rez))
+
+        for move in self.legal_moves(self.active_piece, self.active_square[0], self.active_square[1]):
+            pygame.draw.circle(display, Color.Yellow, [move[1] * self.rez + self.rez // 2, move[0] * self.rez + self.rez // 2], 8)
 
     # ------------------------------------------------------------------------------------ #
     # Given a fen string and a 2D board, this function 
@@ -197,20 +205,19 @@ class ChessBoard(object):
                     moves.append((x - 2, y))
 
             try:
-                # if self.board[x - 1][y - 1] != 0 and str(self.board[x - 1][y - 1]).islower():
                 if str(self.board[x - 1][y - 1]).islower():
                     moves.append((x - 1, y - 1))
             except IndexError:
                 pass
 
             try:
-                # if self.board[x - 1][y + 1] != 0 and str(self.board[x - 1][y - 1]).islower():
                 if str(self.board[x - 1][y + 1]).islower():
                     moves.append((x - 1, y + 1))
             except IndexError:
                 pass
 
         # black pawn
+        
         elif piece == 'p':
             if self.board[x + 1][y] == 0:
                 moves.append((x + 1, y))
@@ -230,49 +237,106 @@ class ChessBoard(object):
             except IndexError:
                 pass
 
+        # rook
+        elif str(piece).lower() == 'r':
+            temp_x = x - 1
+            while temp_x > -1:
+                if self.board[temp_x][y] == 0:
+                    moves.append((temp_x, y))
+                    temp_x -= 1
+                else:        
+                    break
+            
+            temp_x = x + 1
+
+            while temp_x < 8:
+                if self.board[temp_x][y] == 0:
+                    moves.append((temp_x, y))
+                    temp_x += 1
+                else:
+                    break
+            
+            temp_y = y - 1
+
+            while temp_y > -1:
+                if self.board[x][temp_y] == 0:
+                    moves.append((x, temp_y))
+                    temp_y -= 1
+                else:        
+                    break
+            
+            temp_y = y + 1
+
+            while temp_y < 8:
+                if self.board[x][temp_y] == 0:
+                    moves.append((x, temp_y))
+                    temp_y += 1
+                else:
+                    break
+
         # if piece is 0, do nothing
         else:
             pass
         
         return moves
 
-    # ------------------------------------------------------------------------------------ #        
-    # def capture(self, capturing_piece, piece_to_capture):
-    def can_move(self, piece, piece_pos, move_pos):
-        # move_square = self.board[move_pos[0]][move_pos[1]]
-        # if piece == 0:
-        #     return False
-        # elif piece_pos == move_pos:
-        #     return False
-        # elif str(piece).isupper() and str(move_square).isupper():
-        #     return False
-        # elif str(piece).islower() and str(move_square).islower():
-        #     return False
-        
-        # # else:
-        # #     self.board[move_pos[0]][move_pos[1]] = piece
-        
-        # # self.fen = self.board_to_fen()
-        # return True
+    # ------------------------------------------------------------------------------------ #  
+
+    def is_legal_move(self, piece, piece_pos, move_pos):
         if move_pos in self.legal_moves(piece, piece_pos[0], piece_pos[1]):
             return True
 
-    def move(self, piece, piece_pos, move_pos):
-        print(piece)
-        self.board[piece_pos[0]][piece_pos[1]] = 0
-        self.board[move_pos[0]][move_pos[1]] = piece
+    # ------------------------------------------------------------------------------------ #     
+   
+    def capture(self, capturing_piece, capturing_piece_pos, piece_to_capture_pos):
+        piece_to_capture = self.board[piece_to_capture_pos[0]][piece_to_capture_pos[1]]
+        self.board[capturing_piece_pos[0]][capturing_piece_pos[1]] = 0
+        self.board[piece_to_capture_pos[0]][piece_to_capture_pos[1]] = capturing_piece
+
+    # ------------------------------------------------------------------------------------ #     
+
+    def move(self, piece, piece_pos, move_pos):        
+        if self.board[move_pos[0]][move_pos[1]] == 0:
+            self.board[piece_pos[0]][piece_pos[1]] = 0
+            self.board[move_pos[0]][move_pos[1]] = piece
+        else:
+            self.capture(piece, piece_pos, move_pos)
 
         self.fen = self.board_to_fen()
-        print(self.fen)
+
+    # ------------------------------------------------------------------------------------ #     
+
+    def handle_click_event(self, mouse_button):
+        if mouse_button == 1:
+            selected_square = Mousefunc.get_square()
+
+            
+
+            if self.player.piece_selected:
+                if self.is_legal_move(self.active_piece, self.active_square, selected_square):
+                    self.move(self.active_piece, self.active_square, selected_square)
+                else:
+                    print("[ILLEGAL MOVE]")
+                self.player.piece_selected = False
+                self.active_square = (-1, -1)
+                self.active_piece = 0
+            else:
+                self.player.piece_selected = True
+                self.active_square = selected_square
+                self.active_piece = self.board[selected_square[0]][selected_square[1]]
+
+            print(self.legal_moves(self.active_piece, self.active_square[0], self.active_square[1]))
+
+        elif mouse_button == 3:
+            self.active_square = (-1, -1)
+            self.active_piece = 0
 
 # Main Game Loop
 def main():
     run = True
-    initial_fen = "rnbqkbnr/1ppp3p/p/4ppp/4PPP/8/PPPP3P/RNBQKBNR"
-    # initial_fen = "rnbqkbnr/1ppp3p/p/4p1p/5PP/8/PPPP3P/RNBQKBNR"
+    initial_fen = "rnbqkbnr/1ppp3p/8/4ppp/4PPP/8/PPPP3P/RNBQKBNR"
+    # initial_fen = "r/1r/2r/3r/4r/5r/6r/7r"
     chess_board = ChessBoard((0, 0), initial_fen, rez)
-    main_active_square = chess_board.active_square
-
 
     while run:
         for event in pygame.event.get():
@@ -280,37 +344,9 @@ def main():
                 run = False
 
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:
-                    
-                    y, x = Mousefunc.get_square()
-                    chess_board.active_square = (x, y)
-                    main_active_square = chess_board.active_square
-                    state = chess_board.board[main_active_square[0]][main_active_square[1]]
-                    if str(state).isupper():
-                        chess_board.active_piece = state
-                    # print(chess_board.active_piece, main_active_square, chess_board.legal_moves(chess_board.active_piece, main_active_square[0], main_active_square[1]))
-                        piece_square = main_active_square
-                    
-                    # print(chess_board.active_piece)
-
-                    if chess_board.active_piece != chess_board.board[chess_board.active_square[0]][chess_board.active_square[1]]:
-                        if chess_board.can_move(chess_board.active_piece, piece_square, main_active_square):
-                            chess_board.move(chess_board.active_piece, piece_square, main_active_square)
-                        chess_board.active_square = (-1, -1)
-                        chess_board.active_piece = 0
-                elif event.button == 3:
-                    chess_board.active_square = (-1, -1)
-
-
-        # main_active_square = chess_board.active_square
-        # active_piece = chess_board.board[main_active_square[0]][main_active_square[1]] if main_active_square[0] > -1 else 0
+                chess_board.handle_click_event(event.button)
 
         chess_board.draw()
-        legal_moves_of_active_piece = chess_board.legal_moves(chess_board.active_piece, main_active_square[0], main_active_square[1])
-        # print(legal_moves_of_active_piece)
-        for move in legal_moves_of_active_piece:
-            pygame.draw.circle(display, Color.Yellow, [move[1] * rez + rez // 2, move[0] * rez + rez // 2], 8)
-
 
         pygame.display.flip()
 
