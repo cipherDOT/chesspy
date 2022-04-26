@@ -274,6 +274,8 @@ class ChessBoard(object):
 
     def rook_moves(self, piece, x, y):
         moves = []
+
+        # upper file
         temp_x = x - 1
         while temp_x > -1:
             square = self.board[temp_x][y]
@@ -286,8 +288,8 @@ class ChessBoard(object):
             else:
                 break
         
+        # lower file
         temp_x = x + 1
-
         while temp_x < 8:
             square = self.board[temp_x][y]
             if square == 0:
@@ -301,6 +303,7 @@ class ChessBoard(object):
         
         temp_y = y - 1
 
+        # upper rank
         while temp_y > -1:
             square = self.board[x][temp_y]
             if square == 0:
@@ -312,8 +315,8 @@ class ChessBoard(object):
             else:        
                 break
         
+        # lower rank
         temp_y = y + 1
-
         while temp_y < 8:
             square = self.board[x][temp_y]
             if square == 0:
@@ -332,6 +335,8 @@ class ChessBoard(object):
 
     def bishop_moves(self, piece, x, y):
         moves = []
+
+        # upper left diagonal
         temp_x = x - 1
         temp_y = y - 1
         while temp_x > -1 and temp_y > -1:
@@ -346,6 +351,7 @@ class ChessBoard(object):
             else:
                 break
         
+        # lower left diagonal
         temp_x = x + 1
         temp_y = y - 1
 
@@ -361,6 +367,7 @@ class ChessBoard(object):
             else:
                 break
         
+        # upper right diagonal
         temp_x = x - 1
         temp_y = y + 1
 
@@ -376,6 +383,7 @@ class ChessBoard(object):
             else:        
                 break
         
+        # lower right diagonal
         temp_x = x + 1
         temp_y = y + 1
 
@@ -446,7 +454,7 @@ class ChessBoard(object):
 def main():
     run = True
     initial_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
-    # initial_fen = "r6R/8/8/8/8/8/8/R6r"
+    # initial_fen = "8/8/8/3R/8/8/8/8"
     chess_board = ChessBoard((0, 0), initial_fen, rez)
 
     while run:
