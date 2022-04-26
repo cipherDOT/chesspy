@@ -1,4 +1,6 @@
 
+# ------------------------------------------------------------------------------------------ #
+
 import pygame
 pygame.init()
 
@@ -102,10 +104,28 @@ class ChessBoard(object):
         self.board = self.fen_to_board()
         self.active_square = (-1, -1)
         self.active_piece = 0
-        self.turn_to_move = 0
+        self.turn_to_move = True
         self.player = Player("white")
 
 
+    def piece_color(self, piece):
+        piece == str(piece)
+        if piece.isupper():
+            return "white"
+        elif piece.islower():
+            return "black"
+        else:
+            print("[COLOR ERROR : Empty square]")
+
+        
+    def is_enemy(self, piece1, piece2):
+        piece1 = str(piece1)
+        piece2 = str(piece2)
+        if piece1.isupper() and piece2.islower():
+            return True
+        elif piece1.islower() and piece2.isupper():
+            return True
+        return False
     # ------------------------------------------------------------------------------------ #
     # Draw the chess board
     def draw(self):
@@ -131,9 +151,6 @@ class ChessBoard(object):
                 if state.isalpha():
                     piece = FEN_TO_PIECE[state]
                     display.blit(piece, (rank * self.rez, file * self.rez))
-                # else:
-                #     blank = font.render(' ', 1, Color.Black)
-                #     display.blit(blank, (rank * self.rez, file * self.rez))
 
         for move in self.legal_moves(self.active_piece, self.active_square[0], self.active_square[1]):
             pygame.draw.circle(display, Color.Yellow, [move[1] * self.rez + self.rez // 2, move[0] * self.rez + self.rez // 2], 8)
@@ -204,19 +221,18 @@ class ChessBoard(object):
                     moves.append((x - 2, y))
 
             try:
-                if str(self.board[x - 1][y - 1]).islower():
+                if self.is_enemy(self.board[x - 1][y - 1], piece):
                     moves.append((x - 1, y - 1))
             except IndexError:
                 pass
 
             try:
-                if str(self.board[x - 1][y + 1]).islower():
+                if self.is_enemy(self.board[x - 1][y + 1], piece):
                     moves.append((x - 1, y + 1))
             except IndexError:
                 pass
 
         # black pawn
-        
         elif piece == 'p':
             if self.board[x + 1][y] == 0:
                 moves.append((x + 1, y))
@@ -225,68 +241,166 @@ class ChessBoard(object):
                     moves.append((x + 2, y))
 
             try:
-                if str(self.board[x + 1][y - 1]).isupper():
+                if self.is_enemy(self.board[x + 1][y - 1], piece):
                     moves.append((x + 1, y - 1))   
             except IndexError:
                 pass
 
             try:
-                if str(self.board[x + 1][y + 1]).isupper():
+                if self.is_enemy(self.board[x + 1][y + 1], piece):
                     moves.append((x + 1, y + 1)) 
             except IndexError:
                 pass
 
         # rook
         elif str(piece).lower() == 'r':
-            temp_x = x - 1
-            while temp_x > -1:
-                if self.board[temp_x][y] == 0:
-                    moves.append((temp_x, y))
-                    temp_x -= 1
-                else:        
-                    break
-            
-            temp_x = x + 1
+            moves = self.rook_moves(piece, x, y)
 
-            while temp_x < 8:
-                if self.board[temp_x][y] == 0:
-                    moves.append((temp_x, y))
-                    temp_x += 1
-                else:
-                    break
-            
-            temp_y = y - 1
+        elif str(piece).lower() == 'b':
+            moves = self.bishop_moves(piece, x, y)
 
-            while temp_y > -1:
-                if self.board[x][temp_y] == 0:
-                    moves.append((x, temp_y))
-                    temp_y -= 1
-                else:        
-                    break
-            
-            temp_y = y + 1
+        elif str(piece).lower() == 'q':
+            moves = self.rook_moves(piece, x, y)
+            moves += self.bishop_moves(piece, x, y)
 
-            while temp_y < 8:
-                if self.board[x][temp_y] == 0:
-                    moves.append((x, temp_y))
-                    temp_y += 1
-                else:
-                    break
-
-        # if piece is 0, do nothing
+        # if piece is empty i.e., 0, do nothing
         else:
             pass
         
         return moves
 
-    # ------------------------------------------------------------------------------------ #  
+    # ------------------------------------------------------------------------------------ #
+    # rook moves
+
+    def rook_moves(self, piece, x, y):
+        moves = []
+        temp_x = x - 1
+        while temp_x > -1:
+            square = self.board[temp_x][y]
+            if  square == 0:
+                moves.append((temp_x, y))
+                temp_x -= 1
+            elif self.is_enemy(square, piece):
+                moves.append((temp_x, y))
+                break
+            else:
+                break
+        
+        temp_x = x + 1
+
+        while temp_x < 8:
+            square = self.board[temp_x][y]
+            if square == 0:
+                moves.append((temp_x, y))
+                temp_x += 1
+            elif self.is_enemy(square, piece):
+                moves.append((temp_x, y))
+                break
+            else:
+                break
+        
+        temp_y = y - 1
+
+        while temp_y > -1:
+            square = self.board[x][temp_y]
+            if square == 0:
+                moves.append((x, temp_y))
+                temp_y -= 1
+            elif self.is_enemy(square, piece):
+                moves.append((x, temp_y))
+                break
+            else:        
+                break
+        
+        temp_y = y + 1
+
+        while temp_y < 8:
+            square = self.board[x][temp_y]
+            if square == 0:
+                moves.append((x, temp_y))
+                temp_y += 1
+            elif self.is_enemy(square, piece):
+                moves.append((x, temp_y))
+                break
+            else:
+                break
+
+        return moves
+
+    # ------------------------------------------------------------------------------------ #
+    # bishop moves
+
+    def bishop_moves(self, piece, x, y):
+        moves = []
+        temp_x = x - 1
+        temp_y = y - 1
+        while temp_x > -1 and temp_y > -1:
+            square = self.board[temp_x][temp_y]
+            if square == 0:
+                moves.append((temp_x, temp_y))
+                temp_x -= 1
+                temp_y -= 1
+            elif self.is_enemy(square, piece):
+                moves.append((temp_x, temp_y))
+                break
+            else:
+                break
+        
+        temp_x = x + 1
+        temp_y = y - 1
+
+        while temp_x < 8 and temp_y > -1:
+            square = self.board[temp_x][temp_y]
+            if square == 0:
+                moves.append((temp_x, temp_y))
+                temp_x += 1
+                temp_y -= 1
+            elif self.is_enemy(square, piece):
+                moves.append((temp_x, temp_y))
+                break
+            else:
+                break
+        
+        temp_x = x - 1
+        temp_y = y + 1
+
+        while temp_x > -1 and temp_y < 8:
+            square = self.board[temp_x][temp_y]
+            if square == 0:
+                moves.append((temp_x, temp_y))
+                temp_x -= 1
+                temp_y += 1
+            elif self.is_enemy(square, piece):
+                moves.append((temp_x, temp_y))
+                break
+            else:        
+                break
+        
+        temp_x = x + 1
+        temp_y = y + 1
+
+        while temp_x < 8 and temp_y < 8:
+            square = self.board[temp_x][temp_y]
+            if square == 0:
+                moves.append((temp_x, temp_y))
+                temp_x += 1
+                temp_y += 1
+            elif self.is_enemy(square, piece):
+                moves.append((temp_x, temp_y))
+                break
+            else:
+                break
+
+        return moves
+
+    # ------------------------------------------------------------------------------------ #
 
     def is_legal_move(self, piece, piece_pos, move_pos):
         if move_pos in self.legal_moves(piece, piece_pos[0], piece_pos[1]):
             return True
 
-    # ------------------------------------------------------------------------------------ #     
-   
+    # ------------------------------------------------------------------------------------ #
+
     def capture(self, capturing_piece, capturing_piece_pos, piece_to_capture_pos):
         piece_to_capture = self.board[piece_to_capture_pos[0]][piece_to_capture_pos[1]]
         self.board[capturing_piece_pos[0]][capturing_piece_pos[1]] = 0
@@ -309,11 +423,10 @@ class ChessBoard(object):
         if mouse_button == 1:
             selected_square = Mousefunc.get_square()
 
-            
-
             if self.player.piece_selected:
                 if self.is_legal_move(self.active_piece, self.active_square, selected_square):
                     self.move(self.active_piece, self.active_square, selected_square)
+                    self.turn_to_move = not self.turn_to_move
                 else:
                     print("[ILLEGAL MOVE]")
                 self.player.piece_selected = False
@@ -324,7 +437,6 @@ class ChessBoard(object):
                 self.active_square = selected_square
                 self.active_piece = self.board[selected_square[0]][selected_square[1]]
 
-            print(self.legal_moves(self.active_piece, self.active_square[0], self.active_square[1]))
 
         elif mouse_button == 3:
             self.active_square = (-1, -1)
@@ -333,8 +445,8 @@ class ChessBoard(object):
 # Main Game Loop
 def main():
     run = True
-    initial_fen = "rnbqkbnr/1ppp3p/8/4ppp/4PPP/8/PPPP3P/RNBQKBNR"
-    # initial_fen = "r/1r/2r/3r/4r/5r/6r/7r"
+    initial_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
+    # initial_fen = "r6R/8/8/8/8/8/8/R6r"
     chess_board = ChessBoard((0, 0), initial_fen, rez)
 
     while run:
@@ -346,11 +458,9 @@ def main():
                 chess_board.handle_click_event(event.button)
 
         chess_board.draw()
-
         pygame.display.flip()
 
 
 # Calling the main game loop
 if __name__ == "__main__":
     main()
-
