@@ -1,4 +1,4 @@
-from sys import exit
+
 import pygame
 pygame.init()
 
@@ -157,7 +157,6 @@ class ChessBoard(object):
                             j += int(notation)
                         else:
                             print("[ERROR] : Invalid FEN")
-                            exit()
                     else:
                         self.board[i][j] = notation
                         j += 1
