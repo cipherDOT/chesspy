@@ -72,7 +72,7 @@ class Piece():
 class Player(object):
     def __init__(self, color):
         self.color = color
-        self.piece_selected = False
+        self.square_selected = False
         self.dragging = False
 
 
@@ -109,13 +109,13 @@ class ChessBoard(object):
 
 
     def piece_color(self, piece):
-        piece == str(piece)
+        piece = str(piece)
         if piece.isupper():
             return "white"
         elif piece.islower():
             return "black"
         else:
-            print("[COLOR ERROR : Empty square]")
+            pass
 
         
     def is_enemy(self, piece1, piece2):
@@ -252,6 +252,8 @@ class ChessBoard(object):
             except IndexError:
                 pass
 
+        elif str(piece).lower() == 'k':
+            moves = self.king_moves(piece, x, y)
         # rook
         elif str(piece).lower() == 'r':
             moves = self.rook_moves(piece, x, y)
@@ -259,9 +261,13 @@ class ChessBoard(object):
         elif str(piece).lower() == 'b':
             moves = self.bishop_moves(piece, x, y)
 
+        elif str(piece).lower() == 'n':
+            moves = self.knight_moves(piece, x, y)
+
         elif str(piece).lower() == 'q':
             moves = self.rook_moves(piece, x, y)
             moves += self.bishop_moves(piece, x, y)
+
 
         # if piece is empty i.e., 0, do nothing
         else:
@@ -403,6 +409,60 @@ class ChessBoard(object):
 
     # ------------------------------------------------------------------------------------ #
 
+    def knight_moves(self, piece, x, y):
+        possible_moves = [
+            (x - 1, y - 2),
+            (x - 2, y - 1),
+            (x - 2, y + 1),
+            (x - 1, y + 2),
+            (x + 1, y - 2),
+            (x + 2, y - 1),
+            (x + 2, y + 1),
+            (x + 1, y + 2)
+        ]
+        moves = []
+
+        for move in possible_moves:
+            try:
+                square = self.board[move[0]][move[1]]
+                if square == 0:
+                    moves.append(move)
+                elif self.is_enemy(square, piece):
+                    moves.append(move)
+            except IndexError:
+                pass
+
+        return moves
+
+    # ------------------------------------------------------------------------------------ #
+
+    def king_moves(self, piece, x, y):
+        possible_moves = [
+            (x - 1, y - 1),
+            (x    , y - 1),
+            (x + 1, y - 1),
+            (x - 1,     y),
+            (x + 1,     y),
+            (x - 1, y + 1),
+            (x,     y + 1),
+            (x + 1, y + 1)
+        ]
+
+        moves = []
+
+        for move in possible_moves:
+            try:
+                square = self.board[move[0]][move[1]]
+                if square == 0:
+                    moves.append(move)
+                elif self.is_enemy(square, piece):
+                    moves.append(move)
+            except IndexError:
+                pass
+
+        return moves
+    # ------------------------------------------------------------------------------------ #
+
     def is_legal_move(self, piece, piece_pos, move_pos):
         if move_pos in self.legal_moves(piece, piece_pos[0], piece_pos[1]):
             return True
@@ -431,17 +491,17 @@ class ChessBoard(object):
         if mouse_button == 1:
             selected_square = Mousefunc.get_square()
 
-            if self.player.piece_selected:
+            if self.player.square_selected:
                 if self.is_legal_move(self.active_piece, self.active_square, selected_square):
                     self.move(self.active_piece, self.active_square, selected_square)
                     self.turn_to_move = not self.turn_to_move
-                else:
-                    print("[ILLEGAL MOVE]")
-                self.player.piece_selected = False
+                # else:
+                #     print("[ILLEGAL MOVE]")
+                self.player.square_selected = False
                 self.active_square = (-1, -1)
                 self.active_piece = 0
             else:
-                self.player.piece_selected = True
+                self.player.square_selected = True
                 self.active_square = selected_square
                 self.active_piece = self.board[selected_square[0]][selected_square[1]]
 
@@ -453,8 +513,9 @@ class ChessBoard(object):
 # Main Game Loop
 def main():
     run = True
-    initial_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
-    # initial_fen = "8/8/8/3R/8/8/8/8"
+    # initial_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
+    initial_fen = "4r1k1/2BR1Q2/8/8/1P4P1/4P3/1P3P2/5RK1 b - - 0 42"
+    # initial_fen = "8/8/8/4K/8/8/8/8"
     chess_board = ChessBoard((0, 0), initial_fen, rez)
 
     while run:
