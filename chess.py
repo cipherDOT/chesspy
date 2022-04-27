@@ -106,7 +106,8 @@ class ChessBoard(object):
         self.active_piece = 0
         self.turn_to_move = True
         self.player = Player("white")
-
+        self.white_king = None
+        self.black_king = None
 
     def piece_color(self, piece):
         piece = str(piece)
@@ -118,6 +119,14 @@ class ChessBoard(object):
             pass
 
         
+    def refresh_king_positions(self):
+        for i in range(len(self.board)):
+            for j in range(len(self.board[0])):
+                if self.board[i][j] == 'K':
+                    self.white_king = (i, j)
+                elif self.board[i][j] == 'k':
+                    self.black_king = (i, j)
+
     def is_enemy(self, piece1, piece2):
         piece1 = str(piece1)
         piece2 = str(piece2)
@@ -444,7 +453,7 @@ class ChessBoard(object):
             (x - 1,     y),
             (x + 1,     y),
             (x - 1, y + 1),
-            (x,     y + 1),
+            (x    , y + 1),
             (x + 1, y + 1)
         ]
 
@@ -495,11 +504,20 @@ class ChessBoard(object):
                 if self.is_legal_move(self.active_piece, self.active_square, selected_square):
                     self.move(self.active_piece, self.active_square, selected_square)
                     self.turn_to_move = not self.turn_to_move
+                    self.refresh_king_positions()
+                    for move in self.legal_moves(self.active_piece, selected_square[0], selected_square[1]):
+                        if self.active_piece.isupper():
+                            if move == self.black_king:
+                                print("Black Check")
+                        elif self.active_piece.islower():
+                            if move == self.white_king:
+                                print("White Check")
                 # else:
                 #     print("[ILLEGAL MOVE]")
                 self.player.square_selected = False
                 self.active_square = (-1, -1)
                 self.active_piece = 0
+
             else:
                 self.player.square_selected = True
                 self.active_square = selected_square
@@ -515,8 +533,9 @@ def main():
     run = True
     # initial_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
     initial_fen = "4r1k1/2BR1Q2/8/8/1P4P1/4P3/1P3P2/5RK1 b - - 0 42"
-    # initial_fen = "8/8/8/4K/8/8/8/8"
+    # initial_fen = "8/8/8/4N/8/8/8/8"
     chess_board = ChessBoard((0, 0), initial_fen, rez)
+    chess_board.refresh_king_positions()
 
     while run:
         for event in pygame.event.get():
@@ -525,6 +544,13 @@ def main():
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 chess_board.handle_click_event(event.button)
+            
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_w:
+                    print(chess_board.white_king)
+                if event.key == pygame.K_b:
+                    print(chess_board.black_king)
+
 
         chess_board.draw()
         pygame.display.flip()
