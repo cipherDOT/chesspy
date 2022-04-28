@@ -8,7 +8,7 @@ file = 8
 rank = 8
 width = 400
 height = 400
-rez = width // file
+rez = height // file
 display = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Chess")
 font = pygame.font.Font("./assets/custom_fonts/Poppins/Poppins-Light.ttf", 24)
@@ -162,7 +162,8 @@ class ChessBoard(object):
                     display.blit(piece, (rank * self.rez, file * self.rez))
 
         for move in self.legal_moves(self.active_piece, self.active_square[0], self.active_square[1]):
-            pygame.draw.circle(display, Color.Yellow, [move[1] * self.rez + self.rez // 2, move[0] * self.rez + self.rez // 2], 8)
+            if self.is_legal_move(self.active_piece, self.active_square, move):
+                pygame.draw.circle(display, Color.Yellow, [move[1] * self.rez + self.rez // 2, move[0] * self.rez + self.rez // 2], 8)
 
     # ------------------------------------------------------------------------------------ #
     # Given a fen string and a 2D board, this function 
@@ -281,7 +282,7 @@ class ChessBoard(object):
         # if piece is empty i.e., 0, do nothing
         else:
             pass
-        
+
         return moves
 
     # ------------------------------------------------------------------------------------ #
