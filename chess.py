@@ -473,7 +473,14 @@ class ChessBoard(object):
     # ------------------------------------------------------------------------------------ #
 
     def is_legal_move(self, piece, piece_pos, move_pos):
-        if move_pos in self.legal_moves(piece, piece_pos[0], piece_pos[1]):
+
+        possible_moves = self.legal_moves(piece, piece_pos[0], piece_pos[1])
+        # remove the capture of the kings if present in the list of legal moves.
+        for move in possible_moves:
+            if move == self.white_king or move == self.black_king:
+                possible_moves.remove(move)
+
+        if move_pos in possible_moves:
             return True
 
     # ------------------------------------------------------------------------------------ #
