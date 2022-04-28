@@ -1,4 +1,20 @@
 
+
+# todo:
+#       [ ] implement check rule
+#       [ ] implement checkmate rule
+#       [ ] implement en passant
+#       [ ] implement castling
+#       [ ] display the move log of the game
+
+# requirements:
+#       [ ] pygame
+
+# aesthetics:
+#       [ ] font        - Google Poppins light font  
+#       [ ] color theme - chess.com "blues" color theme
+#       [ ] piece asset - https://github.com/SebLague/Chess-AI/blob/main/Assets/Sprites/pieces.png
+
 # ------------------------------------------------------------------------------------------ #
 
 import pygame
