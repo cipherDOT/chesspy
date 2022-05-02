@@ -10,8 +10,6 @@ References:
   * Resources from [Chess.com](https://www.chess.com/) games and theory articles
 
 <h3>Images</h3>
-<h6>Opening:</h6>
-[](assets/imgs/chesspy_img1.png)
+![](assets/imgs/chesspy_img1.png)
 
-<h6>Middlegame:</h6>
-[](assets/imgs/chesspy_img2.png)
+![](assets/imgs/chesspy_img2.png)
