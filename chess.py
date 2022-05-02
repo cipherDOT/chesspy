@@ -32,9 +32,11 @@ width = 400
 height = 400
 rez = height // file
 display = pygame.display.set_mode((width, height))
-pygame.display.set_caption("Chess")
 font = pygame.font.Font("./assets/custom_fonts/Poppins/Poppins-Light.ttf", 24)
 peice_image = pygame.image.load("./assets/pieces.png").convert_alpha()
+logo = pygame.image.load("./assets/logo.png").convert_alpha()
+pygame.display.set_caption("Chess")
+pygame.display.set_icon(logo)
 
 
 # ------------------------------ Utitlity Functions -------------------------------------- #
