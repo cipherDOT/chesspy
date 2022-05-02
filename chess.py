@@ -137,6 +137,8 @@ class ChessBoard(object):
         self.player = Player("white")   # Holds the player data
         self.white_king = None          # position of White King
         self.black_king = None          # position of Black King
+        self.black_check = False        # Truthy if black under check
+        self.white_check = False        # Truthy if white under check
 
 
     # ------------------------------------------------------------------------------------ #
@@ -548,9 +550,11 @@ class ChessBoard(object):
                     for move in self.legal_moves(self.active_piece, selected_square[0], selected_square[1]):
                         if self.active_piece.isupper():
                             if move == self.black_king:
+                                self.black_check = True
                                 print("Black Check")
                         elif self.active_piece.islower():
                             if move == self.white_king:
+                                self.white_check = True
                                 print("White Check")
                 # else:
                 #     print("[ILLEGAL MOVE]")
