@@ -565,7 +565,7 @@ class ChessBoard(object):
                 self.active_piece = 0
 
             else:
-                if (selected_piece.isupper() and self.turn_to_move) or (selected_piece.islower() and not self.turn_to_move):
+                if (str(selected_piece).isupper() and self.turn_to_move) or (str(selected_piece).islower() and not self.turn_to_move):
                     self.player.square_selected = True
                     self.active_square = selected_square
                     self.active_piece = self.board[selected_square[0]][selected_square[1]]
