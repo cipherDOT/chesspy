@@ -1,6 +1,7 @@
 
 
 # todo:
+#       [x] implement turn based game
 #       [ ] implement check rule
 #       [ ] implement checkmate rule
 #       [ ] implement en passant
@@ -14,7 +15,6 @@
 #       [ ] font        - Google Poppins light font  
 #       [ ] color theme - chess.com "blues" color theme
 #       [ ] piece asset - https://github.com/SebLague/Chess-AI/blob/main/Assets/Sprites/pieces.png
-
 # ------------------------------------------------------------------------------------------ #
 
 import pygame
@@ -523,6 +523,7 @@ class ChessBoard(object):
     def handle_click_event(self, mouse_button):
         if mouse_button == 1:
             selected_square = Mousefunc.get_square()
+            selected_piece = self.board[selected_square[0]][selected_square[1]]
 
             if self.player.square_selected:
                 if self.is_legal_move(self.active_piece, self.active_square, selected_square):
@@ -543,10 +544,12 @@ class ChessBoard(object):
                 self.active_piece = 0
 
             else:
-                self.player.square_selected = True
-                self.active_square = selected_square
-                self.active_piece = self.board[selected_square[0]][selected_square[1]]
-
+                if (selected_piece.isupper() and self.turn_to_move) or (selected_piece.islower() and not self.turn_to_move):
+                    self.player.square_selected = True
+                    self.active_square = selected_square
+                    self.active_piece = self.board[selected_square[0]][selected_square[1]]
+                # elif selected_piece.islower() and not self.turn_to_move:
+                #     self.player.square_selected = True
 
         elif mouse_button == 3:
             self.active_square = (-1, -1)
@@ -555,8 +558,8 @@ class ChessBoard(object):
 # Main Game Loop
 def main():
     run = True
-    # initial_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
-    initial_fen = "4r1k1/2BR1Q2/8/8/1P4P1/4P3/1P3P2/5RK1 b - - 0 42"
+    initial_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
+    # initial_fen = "4r1k1/2BR1Q2/8/8/1P4P1/4P3/1P3P2/5RK1 b - - 0 42"
     # initial_fen = "8/8/8/4N/8/8/8/8"
     chess_board = ChessBoard((0, 0), initial_fen, rez)
     chess_board.refresh_king_positions()
