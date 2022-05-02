@@ -50,7 +50,7 @@ def clip(surface, x, y, x_size, y_size, _rez, save=False):
 
     if save:
         pygame.image.save(image, "logo.png")
-        
+
     return image
 
 
@@ -141,12 +141,12 @@ class ChessBoard(object):
         self.board = self.fen_to_board()
         self.active_square = (-1, -1)
         self.active_piece = 0
-        self.turn_to_move = True        # True if white's turn to move, False if black's turn to move
-        self.player = Player("white")   # Holds the player data
-        self.white_king = None          # position of White King
-        self.black_king = None          # position of Black King
-        self.black_check = False        # Truthy if black under check
-        self.white_check = False        # Truthy if white under check
+        self.turn_to_move = self.fen.split()[1] == 'w'      # True if white's turn to move, False if black's turn to move
+        self.player = Player("white")                       # Holds the player data
+        self.white_king = None                              # position of White King
+        self.black_king = None                              # position of Black King
+        self.black_check = False                            # Truthy if black under check
+        self.white_check = False                            # Truthy if white under check
 
 
     # ------------------------------------------------------------------------------------ #
@@ -575,8 +575,6 @@ class ChessBoard(object):
                     self.player.square_selected = True
                     self.active_square = selected_square
                     self.active_piece = self.board[selected_square[0]][selected_square[1]]
-                # elif selected_piece.islower() and not self.turn_to_move:
-                #     self.player.square_selected = True
 
         elif mouse_button == 3:
             self.active_square = (-1, -1)
@@ -586,7 +584,7 @@ class ChessBoard(object):
 # ------------------------------------- The Main Game Loop----------------------------------------------- #
 def main():
     run = True
-    initial_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
+    initial_fen = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"
     chess_board = ChessBoard((0, 0), initial_fen, rez)
     chess_board.refresh_king_positions()
 
@@ -604,7 +602,6 @@ def main():
                 if event.key == pygame.K_b:
                     print(chess_board.black_king)
 
-
         chess_board.draw()
         pygame.display.flip()
 
@@ -615,4 +612,3 @@ if __name__ == "__main__":
     main()
 
 # ------------------------------------------------------------------------------------ #
-
