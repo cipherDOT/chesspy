@@ -9,7 +9,7 @@ References:
   * Articles and resources from [The Chess Programming Wiki](https://www.chessprogramming.org/Main_Page)
   * Resources from [Chess.com](https://www.chess.com/) games and theory articles
 
-<h3>Images</h3>
+## Images
 ![](assets/imgs/chesspy_img1.png)
-<br>
+
 ![](assets/imgs/chesspy_img2.png)
