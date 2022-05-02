@@ -1,6 +1,6 @@
 
 
-# todo:
+# improvements to make:
 #       [x] implement turn based game
 #       [ ] implement check rule
 #       [ ] implement checkmate rule
@@ -11,14 +11,18 @@
 # requirements:
 #       [ ] pygame
 
-# aesthetics:
+# miscellaneous:
 #       [ ] font        - Google Poppins light font  
 #       [ ] color theme - chess.com "blues" color theme
-#       [ ] piece asset - https://github.com/SebLague/Chess-AI/blob/main/Assets/Sprites/pieces.png
 # ------------------------------------------------------------------------------------------ #
+
+
+# --------------------------------- required libraries ----------------------------------- #
 
 import pygame
 pygame.init()
+
+# ---------------------------------- global variables ------------------------------------ #
 
 file = 8
 rank = 8
@@ -31,6 +35,7 @@ font = pygame.font.Font("./assets/custom_fonts/Poppins/Poppins-Light.ttf", 24)
 peice_image = pygame.image.load("./assets/pieces.png").convert_alpha()
 
 
+# ------------------------------ Utitlity Functions -------------------------------------- #
 # Code to clip an image to a sub-image
 def clip(surface, x, y, x_size, y_size, _rez):
     handle_surface = surface.copy()
@@ -40,6 +45,8 @@ def clip(surface, x, y, x_size, y_size, _rez):
     image = pygame.transform.scale(image, (_rez, _rez))
     return image
 
+
+# ------------------------------- Utitlity Classes --------------------------------------- #
 
 class Mousefunc(object):
     def get_square():
@@ -53,11 +60,13 @@ class Mousefunc(object):
 class Color():
     White = (255, 255, 255)
     Black = (0, 0, 0)
-    Yellow = (100, 200, 200)
+    Cyan = (100, 200, 200)
 
     # chess.com "blues" theme
     Light = (123,162,192)  # light blue tiles
     Dark = (76,125,165)    # dark blue tiles
+
+    
     Invert = {
         White : Black,
         Black : White,
@@ -66,7 +75,9 @@ class Color():
     }
 
 
-# Piece class.
+# ------------------------------ Game Mechanics -------------------------------------- #
+
+# ---------------------- Piece Object ------------------- #
 class Piece():
     # White Pieces
     K = clip(peice_image, 0, 0, 333, 333, rez)
@@ -85,6 +96,7 @@ class Piece():
     p = clip(peice_image, 1666, 333, 333, 333, rez)
 
 
+# ---------------------- PLayer Object ------------------- #
 class Player(object):
     def __init__(self, color):
         self.color = color
@@ -95,22 +107,23 @@ class Player(object):
 # A dictionary the holds the fen and their respective piece 
 FEN_TO_PIECE = {
     # White Pieces
-    'K' : Piece.K,
-    'Q' : Piece.Q,
-    'B' : Piece.B,
-    'N' : Piece.N,
-    'R' : Piece.R,
-    'P' : Piece.P,
+    'K' : Piece.K,      # White King
+    'Q' : Piece.Q,      # White Queen
+    'B' : Piece.B,      # White Bishop
+    'N' : Piece.N,      # White Knight
+    'R' : Piece.R,      # White Rook
+    'P' : Piece.P,      # White Pawn
     # # Black Pieces
-    'k' : Piece.k,
-    'q' : Piece.q,
-    'b' : Piece.b,
-    'n' : Piece.n,
-    'r' : Piece.r,
-    'p' : Piece.p
+    'k' : Piece.k,      # Black King
+    'q' : Piece.q,      # Black Queen
+    'b' : Piece.b,      # Black Bishop
+    'n' : Piece.n,      # Black Knight
+    'r' : Piece.r,      # Black Rook
+    'p' : Piece.p       # Black Pawn
 }
 
-# Chess Board class
+
+# ---------------------- Chess Board Object ------------------- #
 class ChessBoard(object):
     def __init__(self, _pos, _fen, _rez):
         self.pos = _pos
@@ -120,11 +133,13 @@ class ChessBoard(object):
         self.board = self.fen_to_board()
         self.active_square = (-1, -1)
         self.active_piece = 0
-        self.turn_to_move = True
-        self.player = Player("white")
-        self.white_king = None
-        self.black_king = None
+        self.turn_to_move = True        # True if white's turn to move, False if black's turn to move
+        self.player = Player("white")   # Holds the player data
+        self.white_king = None          # position of White King
+        self.black_king = None          # position of Black King
 
+
+    # ------------------------------------------------------------------------------------ #
     def piece_color(self, piece):
         piece = str(piece)
         if piece.isupper():
@@ -134,7 +149,7 @@ class ChessBoard(object):
         else:
             pass
 
-        
+    # ------------------------------------------------------------------------------------ #
     def refresh_king_positions(self):
         for i in range(len(self.board)):
             for j in range(len(self.board[0])):
@@ -143,6 +158,7 @@ class ChessBoard(object):
                 elif self.board[i][j] == 'k':
                     self.black_king = (i, j)
 
+    # ------------------------------------------------------------------------------------ #
     def is_enemy(self, piece1, piece2):
         piece1 = str(piece1)
         piece2 = str(piece2)
@@ -151,15 +167,15 @@ class ChessBoard(object):
         elif piece1.islower() and piece2.isupper():
             return True
         return False
+    
     # ------------------------------------------------------------------------------------ #
-    # Draw the chess board
     def draw(self):
 
         for file in range(len(self.board)):
             for rank in range(len(self.board[0])):
                 color = None
                 if file == self.active_square[0] and rank == self.active_square[1]:
-                    color = Color.Yellow
+                    color = Color.Cyan
                 elif (file + rank) % 2 == 0:
                     color = Color.Light
                 else:
@@ -179,11 +195,10 @@ class ChessBoard(object):
 
         for move in self.legal_moves(self.active_piece, self.active_square[0], self.active_square[1]):
             if self.is_legal_move(self.active_piece, self.active_square, move):
-                pygame.draw.circle(display, Color.Yellow, [move[1] * self.rez + self.rez // 2, move[0] * self.rez + self.rez // 2], 8)
+                pygame.draw.circle(display, Color.Cyan, [move[1] * self.rez + self.rez // 2, move[0] * self.rez + self.rez // 2], 8)
 
+    
     # ------------------------------------------------------------------------------------ #
-    # Given a fen string and a 2D board, this function 
-    # will place the pieces in the board accordingly.
     def fen_to_board(self):
         valid = self.fen.count('/') == 7
         if not valid:
@@ -555,12 +570,11 @@ class ChessBoard(object):
             self.active_square = (-1, -1)
             self.active_piece = 0
 
-# Main Game Loop
+
+# ------------------------------------- The Main Game Loop----------------------------------------------- #
 def main():
     run = True
     initial_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
-    # initial_fen = "4r1k1/2BR1Q2/8/8/1P4P1/4P3/1P3P2/5RK1 b - - 0 42"
-    # initial_fen = "8/8/8/4N/8/8/8/8"
     chess_board = ChessBoard((0, 0), initial_fen, rez)
     chess_board.refresh_king_positions()
 
@@ -583,6 +597,9 @@ def main():
         pygame.display.flip()
 
 
-# Calling the main game loop
+# -------------------------------- Game Initiation ----------------------------------- #
+
 if __name__ == "__main__":
     main()
+
+# ------------------------------------------------------------------------------------ #
