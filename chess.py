@@ -39,12 +39,16 @@ peice_image = pygame.image.load("./assets/pieces.png").convert_alpha()
 
 # ------------------------------ Utitlity Functions -------------------------------------- #
 # Code to clip an image to a sub-image
-def clip(surface, x, y, x_size, y_size, _rez):
+def clip(surface, x, y, x_size, y_size, _rez, save=False):
     handle_surface = surface.copy()
     clipRect = pygame.Rect(x,y,x_size,y_size)
     handle_surface.set_clip(clipRect)
     image = surface.subsurface(handle_surface.get_clip())
     image = pygame.transform.scale(image, (_rez, _rez))
+
+    if save:
+        pygame.image.save(image, "logo.png")
+        
     return image
 
 
