@@ -15,3 +15,4 @@ Opening:
 
 Middlegame:
 ![](assets/imgs/chesspy_img2.png)
+
