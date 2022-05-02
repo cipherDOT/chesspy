@@ -11,11 +11,7 @@ References:
 
 <h3>Images</h3>
 <h6>Opening:</h6>
-<div>
-![](assets/imgs/chesspy_img1.png)
-</div>
+[](assets/imgs/chesspy_img1.png)
 
-<div>
 <h6>Middlegame:</h6>
-![](assets/imgs/chesspy_img2.png)
-</div>
+[](assets/imgs/chesspy_img2.png)
