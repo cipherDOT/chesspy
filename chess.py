@@ -4,6 +4,8 @@
 #       [x] implement turn based game
 #       [ ] implement check rule
 #       [ ] implement checkmate rule
+#               [ ] if all the moves of the king is also in all the moves of the enemy color, 
+#                   then it's checkmate
 #       [ ] implement en passant
 #       [ ] implement castling
 #       [ ] display the move log of the game
