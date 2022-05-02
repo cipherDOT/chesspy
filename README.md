@@ -11,5 +11,5 @@ References:
 
 <h3>Images</h3>
 ![](assets/imgs/chesspy_img1.png)
-
+<br>
 ![](assets/imgs/chesspy_img2.png)
