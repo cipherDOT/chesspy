@@ -197,7 +197,7 @@ class ChessBoard(object):
             print("Check Mate")
             print(self.fen)
             mate_text = font.render("Check Mate!", 1, (255, 255, 255))
-            display.blit(mate_text, (410, 30))
+            display.blit(mate_text, (420, 30))
 
         self.all_white_moves = self.white_moves()
         self.all_black_moves = self.black_moves()
@@ -658,15 +658,10 @@ class ChessBoard(object):
                         if self.active_piece.isupper():
                             if move == self.black_king:
                                 self.black_check = True
-                                print("Black Check")
 
-                                # if self.legal_moves('k', self.black_king[0], self.black_king[1]) == []:
-                                #     self.check_mate = True
-                                #     print("Check Mate")
                         elif self.active_piece.islower():
                             if move == self.white_king:
                                 self.white_check = True
-                                print("White Check")
 
                 self.player.square_selected = False
                 self.active_square = (-1, -1)
