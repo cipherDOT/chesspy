@@ -33,7 +33,7 @@ pygame.init()
 
 file = 8
 rank = 8
-width = 400
+width = 600
 height = 400
 rez = height // file
 display = pygame.display.set_mode((width, height))
@@ -196,6 +196,8 @@ class ChessBoard(object):
         if self.check_mate:
             print("Check Mate")
             print(self.fen)
+            mate_text = font.render("Check Mate!", 1, (255, 255, 255))
+            display.blit(mate_text, (410, 30))
 
         self.all_white_moves = self.white_moves()
         self.all_black_moves = self.black_moves()
@@ -684,8 +686,8 @@ class ChessBoard(object):
 # ------------------------------------- The Main Game Loop----------------------------------------------- #
 def main():
     run = True
-    initial_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0"
-    # initial_fen = "4r1k1/2BR1Q2/8/8/1P4P1/4P3/1P3P2/5RK1 b - - 0 42"
+    # initial_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0"
+    initial_fen = "4r1k1/2BR1Q2/8/8/1P4P1/4P3/1P3P2/5RK1 b - - 0 42"
     chess_board = ChessBoard((0, 0), initial_fen, rez)
     chess_board.refresh()
 
