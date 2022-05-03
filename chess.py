@@ -2,8 +2,8 @@
 
 # improvements to make:
 #       [x] implement turn based game
-#       [ ] implement check rule
-#       [ ] implement checkmate rule
+#       [x] implement check rule
+#       [x] implement checkmate rule
 #               [ ] if all the moves of the king is also in all the moves of the enemy color, 
 #                   then it's checkmate
 #       [ ] implement en passant
@@ -12,6 +12,8 @@
 
 # requirements:
 #       [ ] pygame
+#       [ ] sys
+#       [ ] time
 
 # miscellaneous:
 #       [ ] font        - Google Poppins light font  
@@ -21,7 +23,10 @@
 
 # --------------------------------- required libraries ----------------------------------- #
 
+
 import pygame
+from sys import exit
+import time
 pygame.init()
 
 # ---------------------------------- global variables ------------------------------------ #
@@ -145,8 +150,12 @@ class ChessBoard(object):
         self.player = Player("white")                       # Holds the player data
         self.white_king = None                              # position of White King
         self.black_king = None                              # position of Black King
-        self.black_check = False                            # Truthy if black under check
         self.white_check = False                            # Truthy if white under check
+        self.black_check = False                            # Truthy if black under check
+        self.all_white_moves = []                           # has all possible moves by white
+        self.all_black_moves = []                           # has all possible moves by black
+        self.check_mate = False
+        self.stale_mate = False
 
 
     # ------------------------------------------------------------------------------------ #
@@ -160,14 +169,70 @@ class ChessBoard(object):
             pass
 
     # ------------------------------------------------------------------------------------ #
-    def refresh_king_positions(self):
+    def refresh(self):
+
+        if self.check_mate:
+            time.sleep(5)
+            exit()
+
         for i in range(len(self.board)):
             for j in range(len(self.board[0])):
                 if self.board[i][j] == 'K':
                     self.white_king = (i, j)
-                elif self.board[i][j] == 'k':
+                if self.board[i][j] == 'k':
                     self.black_king = (i, j)
 
+        self.all_white_moves = self.white_moves()
+        self.all_black_moves = self.black_moves()
+
+        if self.legal_moves('K', self.white_king[0], self.white_king[1]) == []:
+            if self.white_king in self.all_black_moves:
+                self.check_mate = True
+
+        if self.legal_moves('k', self.black_king[0], self.black_king[1]) == []:
+            if self.black_king in self.all_white_moves:
+                self.check_mate = True
+
+        if self.check_mate:
+            print("Check Mate")
+            print(self.fen)
+
+        self.all_white_moves = self.white_moves()
+        self.all_black_moves = self.black_moves()
+
+    # ------------------------------------------------------------------------------------ #
+    def white_moves(self, board = None):
+        if board == None:
+            board = self.board
+
+        white_moves = []
+
+        for i in range(len(board)):
+            for j in range(len(board[0])):
+                if str(board[i][j]).isupper():
+                    if board[i][j] == 'K':
+                        self.white_king = (i, j)
+                    white_moves.extend(self.legal_moves(board[i][j], i, j))
+
+        return white_moves
+
+    # ------------------------------------------------------------------------------------ #
+
+    def black_moves(self, board = None):
+        if board == None:
+            board = self.board
+
+        black_moves = []
+
+        for i in range(len(board)):
+            for j in range(len(board[0])):
+                if str(board[i][j]).islower():
+                    if board[i][j] == 'k':
+                        self.black_king = (i, j)
+                    black_moves.extend(self.legal_moves(board[i][j], i, j))
+
+        return black_moves
+        
     # ------------------------------------------------------------------------------------ #
     def is_enemy(self, piece1, piece2):
         piece1 = str(piece1)
@@ -206,7 +271,7 @@ class ChessBoard(object):
         for move in self.legal_moves(self.active_piece, self.active_square[0], self.active_square[1]):
             if self.is_legal_move(self.active_piece, self.active_square, move):
                 pygame.draw.circle(display, Color.Cyan, [move[1] * self.rez + self.rez // 2, move[0] * self.rez + self.rez // 2], 8)
-
+        
     
     # ------------------------------------------------------------------------------------ #
     def fen_to_board(self):
@@ -264,6 +329,36 @@ class ChessBoard(object):
     def legal_moves(self, piece, x, y):
         # white pawn
         moves = []
+        if str(piece).lower() == 'p':
+            moves = self.pawn_moves(piece, x, y)
+
+        elif str(piece).lower() == 'k':
+            moves = self.king_moves(piece, x, y)
+        # rook
+        elif str(piece).lower() == 'r':
+            moves = self.rook_moves(piece, x, y)
+
+        elif str(piece).lower() == 'b':
+            moves = self.bishop_moves(piece, x, y)
+
+        elif str(piece).lower() == 'n':
+            moves = self.knight_moves(piece, x, y)
+
+        elif str(piece).lower() == 'q':
+            moves = self.rook_moves(piece, x, y)
+            moves += self.bishop_moves(piece, x, y)
+
+        # if piece is empty i.e., 0, do nothing
+        else:
+            pass
+
+        return moves
+
+    # ------------------------------------------------------------------------------------ #
+
+    def pawn_moves(self, piece, x, y):
+        moves = []
+
         if piece == 'P':
             if self.board[x - 1][y] == 0:
                 moves.append((x - 1, y))
@@ -303,29 +398,7 @@ class ChessBoard(object):
             except IndexError:
                 pass
 
-        elif str(piece).lower() == 'k':
-            moves = self.king_moves(piece, x, y)
-        # rook
-        elif str(piece).lower() == 'r':
-            moves = self.rook_moves(piece, x, y)
-
-        elif str(piece).lower() == 'b':
-            moves = self.bishop_moves(piece, x, y)
-
-        elif str(piece).lower() == 'n':
-            moves = self.knight_moves(piece, x, y)
-
-        elif str(piece).lower() == 'q':
-            moves = self.rook_moves(piece, x, y)
-            moves += self.bishop_moves(piece, x, y)
-
-
-        # if piece is empty i.e., 0, do nothing
-        else:
-            pass
-
         return moves
-
     # ------------------------------------------------------------------------------------ #
     # rook moves
 
@@ -384,6 +457,11 @@ class ChessBoard(object):
                 break
             else:
                 break
+
+        try:
+            moves.remove((x, y))
+        except:
+            pass
 
         return moves
 
@@ -455,7 +533,10 @@ class ChessBoard(object):
                 break
             else:
                 break
-
+        try:
+            moves.remove((x, y))
+        except:
+            pass
         return moves
 
     # ------------------------------------------------------------------------------------ #
@@ -486,6 +567,7 @@ class ChessBoard(object):
         return moves
 
     # ------------------------------------------------------------------------------------ #
+    # king moves
 
     def king_moves(self, piece, x, y):
         possible_moves = [
@@ -502,14 +584,29 @@ class ChessBoard(object):
         moves = []
 
         for move in possible_moves:
-            try:
-                square = self.board[move[0]][move[1]]
-                if square == 0:
+            if move[0] < 0 or move[0] > 7 or move[1] < 0 or move[1] > 7:
+                continue
+            if piece.isupper():
+                if move in self.all_black_moves:
+                    continue
+            elif piece.islower():
+                if move in self.all_white_moves:
+                    continue
+
+            square = self.board[move[0]][move[1]]
+            if square == 0:
+                moves.append(move)
+            elif self.is_enemy(square, piece):
+                board = self.board.copy()
+                board[move[0]][move[1]] = 0
+                if str(piece).islower():
+                    enemy_moves = self.white_moves(board)
+                elif str(piece).isupper():
+                    enemy_moves = self.black_moves(board)
+
+                if move not in enemy_moves:
                     moves.append(move)
-                elif self.is_enemy(square, piece):
-                    moves.append(move)
-            except IndexError:
-                pass
+                board[move[0]][move[1]] = square
 
         return moves
     # ------------------------------------------------------------------------------------ #
@@ -524,7 +621,7 @@ class ChessBoard(object):
 
         if move_pos in possible_moves:
             return True
-
+            
     # ------------------------------------------------------------------------------------ #
 
     def capture(self, capturing_piece, capturing_piece_pos, piece_to_capture_pos):
@@ -549,23 +646,26 @@ class ChessBoard(object):
         if mouse_button == 1:
             selected_square = Mousefunc.get_square()
             selected_piece = self.board[selected_square[0]][selected_square[1]]
-
+            
             if self.player.square_selected:
                 if self.is_legal_move(self.active_piece, self.active_square, selected_square):
                     self.move(self.active_piece, self.active_square, selected_square)
                     self.turn_to_move = not self.turn_to_move
-                    self.refresh_king_positions()
+                    self.refresh()
                     for move in self.legal_moves(self.active_piece, selected_square[0], selected_square[1]):
                         if self.active_piece.isupper():
                             if move == self.black_king:
                                 self.black_check = True
                                 print("Black Check")
+
+                                # if self.legal_moves('k', self.black_king[0], self.black_king[1]) == []:
+                                #     self.check_mate = True
+                                #     print("Check Mate")
                         elif self.active_piece.islower():
                             if move == self.white_king:
                                 self.white_check = True
                                 print("White Check")
-                # else:
-                #     print("[ILLEGAL MOVE]")
+
                 self.player.square_selected = False
                 self.active_square = (-1, -1)
                 self.active_piece = 0
@@ -584,11 +684,14 @@ class ChessBoard(object):
 # ------------------------------------- The Main Game Loop----------------------------------------------- #
 def main():
     run = True
-    initial_fen = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"
+    initial_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0"
+    # initial_fen = "4r1k1/2BR1Q2/8/8/1P4P1/4P3/1P3P2/5RK1 b - - 0 42"
     chess_board = ChessBoard((0, 0), initial_fen, rez)
-    chess_board.refresh_king_positions()
+    chess_board.refresh()
 
     while run:
+        chess_board.refresh()
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -598,9 +701,9 @@ def main():
             
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_w:
-                    print(chess_board.white_king)
+                    print(chess_board.legal_moves('K', chess_board.white_king[0], chess_board.white_king[1]))
                 if event.key == pygame.K_b:
-                    print(chess_board.black_king)
+                    print(chess_board.legal_moves('k', chess_board.black_king[0], chess_board.black_king[1]))
 
         chess_board.draw()
         pygame.display.flip()
