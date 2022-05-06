@@ -7,6 +7,7 @@
 #               [ ] if all the moves of the king is also in all the moves of the enemy color, 
 #                   then it's checkmate
 #       [x] implement en passant
+#       [ ] implement check priority rule, i.e., legal moves
 #       [ ] implement castling
 #       [ ] display the move log of the game
 
@@ -369,9 +370,11 @@ class ChessBoard(object):
                     moves.append((x - 2, y))
 
             try:
+                # capturing the cross-pawn
                 if self.is_enemy(self.board[x - 1][y - 1], piece):
                     moves.append((x - 1, y - 1))
 
+                # checking for en passant oppurtunity
                 if self.is_enemy(self.board[x][y - 1], piece):
                     if str(self.board[x][y - 1]).lower() == 'p':
                         if (x, y - 1) == self.en_passant_pawn:
@@ -459,7 +462,7 @@ class ChessBoard(object):
         
         temp_y = y - 1
 
-        # upper rank
+        # right rank
         while temp_y > -1:
             square = self.board[x][temp_y]
             if square == 0:
@@ -471,7 +474,7 @@ class ChessBoard(object):
             else:        
                 break
         
-        # lower rank
+        # left rank
         temp_y = y + 1
         while temp_y < 8:
             square = self.board[x][temp_y]
@@ -657,7 +660,7 @@ class ChessBoard(object):
 
     # ------------------------------------------------------------------------------------ #     
 
-    def move(self, piece, piece_pos, move_pos):        
+    def move_piece(self, piece, piece_pos, move_pos):        
         if self.board[move_pos[0]][move_pos[1]] == 0:
 
             if str(self.board[move_pos[0] + 1][move_pos[1]]) == 'p' and piece == 'P':
@@ -679,40 +682,52 @@ class ChessBoard(object):
 
     # ------------------------------------------------------------------------------------ #     
 
+    def check_for_en_passant(self, target_square):
+        if str(self.active_piece).lower() == 'p':
+            if abs(self.active_square[0] - target_square[0]) == 2:
+                self.en_passant_pawn = target_square
+                en_passant_fen = self.fen
+                en_passant_fen = en_passant_fen.split()
+                en_passant_fen[3] = ''.join(str(i) for i in target_square[::-1])
+                self.fen = ' '.join(en_passant_fen)
+            else:
+                _fen = self.fen
+                _fen = _fen.split()
+                _fen[3] = '-'
+                self.fen = ' '.join(_fen) 
+                self.en_passant_pawn = (-1, -1) 
+
+    # ------------------------------------------------------------------------------------ #  
+    def check_for_checks(self, target_square):
+        for move in self.legal_moves(self.active_piece, target_square[0], target_square[1]):
+            if self.active_piece.isupper():
+                if move == self.black_king:
+                    self.black_check = True
+
+            elif self.active_piece.islower():
+                if move == self.white_king:
+                    self.white_check = True
+
+    # ------------------------------------------------------------------------------------ #  
+
     def handle_click_event(self, mouse_button):
+        # seeing if the game is still playable and not in 
+        # check mate or stale mate state
         if self.playable:
+
+            # Left CLick
             if mouse_button == 1:
                 selected_square = Mousefunc.get_square()
                 selected_piece = self.board[selected_square[0]][selected_square[1]]
                 
+                # if a square was already selected by the player
                 if self.player.square_selected:
                     if self.is_legal_move(self.active_piece, self.active_square, selected_square):
-                        self.move(self.active_piece, self.active_square, selected_square)
-
-                        if str(self.active_piece).lower() == 'p':
-                            if abs(self.active_square[0] - selected_square[0]) == 2:
-                                self.en_passant_pawn = selected_square
-                                en_passant_fen = self.fen
-                                en_passant_fen = en_passant_fen.split()
-                                en_passant_fen[3] = ''.join(str(i) for i in selected_square[::-1])
-                                self.fen = ' '.join(en_passant_fen)
-                            else:
-                                _fen = self.fen
-                                _fen = _fen.split()
-                                _fen[3] = '-'
-                                self.fen = ' '.join(_fen) 
-                                self.en_passant_pawn = (-1, -1) 
-
+                        self.move_piece(self.active_piece, self.active_square, selected_square)
+                        self.check_for_en_passant(selected_square)
                         self.turn_to_move = not self.turn_to_move
                         self.refresh()
-                        for move in self.legal_moves(self.active_piece, selected_square[0], selected_square[1]):
-                            if self.active_piece.isupper():
-                                if move == self.black_king:
-                                    self.black_check = True
-
-                            elif self.active_piece.islower():
-                                if move == self.white_king:
-                                    self.white_check = True
+                        self.check_for_checks(selected_square)
 
                     self.player.square_selected = False
                     self.active_square = (-1, -1)
@@ -725,10 +740,12 @@ class ChessBoard(object):
                         self.active_square = selected_square
                         self.active_piece = self.board[selected_square[0]][selected_square[1]]
 
+            # Right Click
             elif mouse_button == 3:
                 self.active_square = (-1, -1)
                 self.active_piece = 0
 
+        # If the game is not playable
         else:
             print("[GAME] : Game over by check mate")
 
@@ -736,8 +753,7 @@ class ChessBoard(object):
 # ------------------------------------- The Main Game Loop----------------------------------------------- #
 def main():
     run = True
-    initial_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0"
-    # initial_fen = "4r1k1/2BR1Q2/8/8/1P4P1/4P3/1P3P2/5RK1 b - - 0 42"
+    initial_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0"   # inital state of a chess board
     chess_board = ChessBoard((0, 0), initial_fen, rez)
     chess_board.refresh()
 
