@@ -31,7 +31,7 @@ pygame.init()
 
 file = 8
 rank = 8
-width = 400
+width = 600
 height = 400
 rez = height // file
 display = pygame.display.set_mode((width, height))
