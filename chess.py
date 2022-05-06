@@ -6,7 +6,7 @@
 #       [x] implement checkmate rule
 #               [ ] if all the moves of the king is also in all the moves of the enemy color, 
 #                   then it's checkmate
-#       [ ] implement en passant
+#       [x] implement en passant
 #       [ ] implement castling
 #       [ ] display the move log of the game
 
@@ -25,15 +25,13 @@
 
 
 import pygame
-from sys import exit
-import time
 pygame.init()
 
 # ---------------------------------- global variables ------------------------------------ #
 
 file = 8
 rank = 8
-width = 600
+width = 400
 height = 400
 rez = height // file
 display = pygame.display.set_mode((width, height))
@@ -142,6 +140,7 @@ class ChessBoard(object):
         self.pos = _pos
         self.fen = _fen
         self.rez = _rez
+        self.playable = True
         self.board = [[0 for _ in range(rank)] for _ in range(file)]
         self.board = self.fen_to_board()
         self.active_square = (-1, -1)
@@ -156,7 +155,7 @@ class ChessBoard(object):
         self.all_black_moves = []                           # has all possible moves by black
         self.check_mate = False
         self.stale_mate = False
-
+        self.en_passant_pawn = None
 
     # ------------------------------------------------------------------------------------ #
     def piece_color(self, piece):
@@ -170,10 +169,6 @@ class ChessBoard(object):
 
     # ------------------------------------------------------------------------------------ #
     def refresh(self):
-
-        if self.check_mate:
-            time.sleep(5)
-            exit()
 
         for i in range(len(self.board)):
             for j in range(len(self.board[0])):
@@ -193,9 +188,10 @@ class ChessBoard(object):
             if self.black_king in self.all_white_moves:
                 self.check_mate = True
 
-        if self.check_mate:
+        if self.check_mate and self.playable:
             print("Check Mate")
             print(self.fen)
+            self.playable = False
             mate_text = font.render("Check Mate!", 1, (255, 255, 255))
             display.blit(mate_text, (420, 30))
 
@@ -303,8 +299,8 @@ class ChessBoard(object):
 
     # ------------------------------------------------------------------------------------ #
 
-    def board_to_fen(self):
-        _fen = ''
+    def board_to_fen(self, fen):
+        piece_pos = ''
 
         for file in range(len(self.board)):
             count = 0
@@ -314,17 +310,22 @@ class ChessBoard(object):
                     count += 1
                 else:
                     count = '' if count == 0 else str(count)
-                    _fen += count
+                    piece_pos += count
                     count = 0
-                    _fen += state
+                    piece_pos += state
 
             if count == 8:
-                _fen += '8'
-            _fen += '/'
+                piece_pos += '8'
+            piece_pos += '/'
 
-        _fen = _fen[:-1]
+        piece_pos = piece_pos[:-1]
+        fen = fen.split()
+        fen[0] = piece_pos
+        fen[1] = 'b' if self.turn_to_move else 'w'
+        fen = ' '.join(fen)
 
-        return _fen
+
+        return fen
 
     # ------------------------------------------------------------------------------------ #
 
@@ -350,7 +351,6 @@ class ChessBoard(object):
             moves = self.rook_moves(piece, x, y)
             moves += self.bishop_moves(piece, x, y)
 
-        # if piece is empty i.e., 0, do nothing
         else:
             pass
 
@@ -371,12 +371,24 @@ class ChessBoard(object):
             try:
                 if self.is_enemy(self.board[x - 1][y - 1], piece):
                     moves.append((x - 1, y - 1))
+
+                if self.is_enemy(self.board[x][y - 1], piece):
+                    if str(self.board[x][y - 1]).lower() == 'p':
+                        if (x, y - 1) == self.en_passant_pawn:
+                            moves.append((x - 1, y - 1))
+                
             except IndexError:
                 pass
 
             try:
                 if self.is_enemy(self.board[x - 1][y + 1], piece):
                     moves.append((x - 1, y + 1))
+
+                if self.is_enemy(self.board[x][y + 1], piece):
+                    if str(self.board[x][y + 1]).lower() == 'p':
+                        if (x, y + 1) == self.en_passant_pawn:
+                            moves.append((x - 1, y + 1))
+
             except IndexError:
                 pass
 
@@ -391,12 +403,24 @@ class ChessBoard(object):
             try:
                 if self.is_enemy(self.board[x + 1][y - 1], piece):
                     moves.append((x + 1, y - 1))   
+
+                if self.is_enemy(self.board[x][y - 1], piece):
+                    if str(self.board[x][y - 1]).lower() == 'p':
+                        if (x, y - 1) == self.en_passant_pawn:
+                            moves.append((x + 1, y - 1))
+
             except IndexError:
                 pass
 
             try:
                 if self.is_enemy(self.board[x + 1][y + 1], piece):
                     moves.append((x + 1, y + 1)) 
+
+                if self.is_enemy(self.board[x][y + 1], piece):
+                    if str(self.board[x][y + 1]).lower() == 'p':
+                        if (x, y + 1) == self.en_passant_pawn:
+                            moves.append((x + 1, y + 1))
+
             except IndexError:
                 pass
 
@@ -635,54 +659,85 @@ class ChessBoard(object):
 
     def move(self, piece, piece_pos, move_pos):        
         if self.board[move_pos[0]][move_pos[1]] == 0:
+
+            if str(self.board[move_pos[0] + 1][move_pos[1]]) == 'p' and piece == 'P':
+                self.board[move_pos[0] + 1][move_pos[1]] = 0
+                self.board[move_pos[0]][move_pos[1]] = piece
+            
+            elif str(self.board[move_pos[0] - 1][move_pos[1]]) == 'P' and piece == 'p':
+                self.board[move_pos[0] - 1][move_pos[1]] = 0
+                self.board[move_pos[0]][move_pos[1]] = piece
+            else:
+                self.board[move_pos[0]][move_pos[1]] = piece
+            
             self.board[piece_pos[0]][piece_pos[1]] = 0
-            self.board[move_pos[0]][move_pos[1]] = piece
+
         else:
             self.capture(piece, piece_pos, move_pos)
 
-        self.fen = self.board_to_fen()
+        self.fen = self.board_to_fen(self.fen)
 
     # ------------------------------------------------------------------------------------ #     
 
     def handle_click_event(self, mouse_button):
-        if mouse_button == 1:
-            selected_square = Mousefunc.get_square()
-            selected_piece = self.board[selected_square[0]][selected_square[1]]
-            
-            if self.player.square_selected:
-                if self.is_legal_move(self.active_piece, self.active_square, selected_square):
-                    self.move(self.active_piece, self.active_square, selected_square)
-                    self.turn_to_move = not self.turn_to_move
-                    self.refresh()
-                    for move in self.legal_moves(self.active_piece, selected_square[0], selected_square[1]):
-                        if self.active_piece.isupper():
-                            if move == self.black_king:
-                                self.black_check = True
+        if self.playable:
+            if mouse_button == 1:
+                selected_square = Mousefunc.get_square()
+                selected_piece = self.board[selected_square[0]][selected_square[1]]
+                
+                if self.player.square_selected:
+                    if self.is_legal_move(self.active_piece, self.active_square, selected_square):
+                        self.move(self.active_piece, self.active_square, selected_square)
 
-                        elif self.active_piece.islower():
-                            if move == self.white_king:
-                                self.white_check = True
+                        if str(self.active_piece).lower() == 'p':
+                            if abs(self.active_square[0] - selected_square[0]) == 2:
+                                self.en_passant_pawn = selected_square
+                                en_passant_fen = self.fen
+                                en_passant_fen = en_passant_fen.split()
+                                en_passant_fen[3] = ''.join(str(i) for i in selected_square[::-1])
+                                self.fen = ' '.join(en_passant_fen)
+                            else:
+                                _fen = self.fen
+                                _fen = _fen.split()
+                                _fen[3] = '-'
+                                self.fen = ' '.join(_fen) 
+                                self.en_passant_pawn = (-1, -1) 
 
-                self.player.square_selected = False
+                        self.turn_to_move = not self.turn_to_move
+                        self.refresh()
+                        for move in self.legal_moves(self.active_piece, selected_square[0], selected_square[1]):
+                            if self.active_piece.isupper():
+                                if move == self.black_king:
+                                    self.black_check = True
+
+                            elif self.active_piece.islower():
+                                if move == self.white_king:
+                                    self.white_check = True
+
+                    self.player.square_selected = False
+                    self.active_square = (-1, -1)
+                    self.active_piece = 0
+
+                # if no square was selected already
+                else:
+                    if (str(selected_piece).isupper() and self.turn_to_move) or (str(selected_piece).islower() and not self.turn_to_move):
+                        self.player.square_selected = True
+                        self.active_square = selected_square
+                        self.active_piece = self.board[selected_square[0]][selected_square[1]]
+
+            elif mouse_button == 3:
                 self.active_square = (-1, -1)
                 self.active_piece = 0
 
-            else:
-                if (str(selected_piece).isupper() and self.turn_to_move) or (str(selected_piece).islower() and not self.turn_to_move):
-                    self.player.square_selected = True
-                    self.active_square = selected_square
-                    self.active_piece = self.board[selected_square[0]][selected_square[1]]
-
-        elif mouse_button == 3:
-            self.active_square = (-1, -1)
-            self.active_piece = 0
+        else:
+            print("[GAME] : Game over by check mate")
 
 
 # ------------------------------------- The Main Game Loop----------------------------------------------- #
 def main():
     run = True
-    # initial_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0"
-    initial_fen = "4r1k1/2BR1Q2/8/8/1P4P1/4P3/1P3P2/5RK1 b - - 0 42"
+    initial_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0"
+    # initial_fen = "4r1k1/2BR1Q2/8/8/1P4P1/4P3/1P3P2/5RK1 b - - 0 42"
     chess_board = ChessBoard((0, 0), initial_fen, rez)
     chess_board.refresh()
 
