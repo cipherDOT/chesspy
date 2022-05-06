@@ -116,7 +116,7 @@ class Player(object):
         self.dragging = False
 
 
-# A dictionary the holds the fen and their respective piece 
+# A dictionary that holds the fen notation and their respective piece image 
 FEN_TO_PIECE = {
     # White Pieces
     'K' : Piece.K,      # White King
