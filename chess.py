@@ -110,7 +110,7 @@ class Piece():
 
 # ---------------------- PLayer Object ------------------- #
 class Player(object):
-    def __init__(self, color: str):
+    def __init__(self, color):
         self.color = color
         self.square_selected = False
         self.dragging = False
@@ -137,7 +137,7 @@ FEN_TO_PIECE = {
 
 # ---------------------- Chess Board Object ------------------- #
 class ChessBoard(object):
-    def __init__(self, _pos: tuple, _fen: str, _rez: int):
+    def __init__(self, _pos, _fen, _rez):
         self.pos = _pos
         self.fen = _fen
         self.rez = _rez
@@ -159,7 +159,7 @@ class ChessBoard(object):
         self.en_passant_pawn = None
 
     # ------------------------------------------------------------------------------------ #
-    def piece_color(self, piece: str):
+    def piece_color(self, piece):
         piece = str(piece)
         if piece.isupper():
             return "white"
@@ -233,7 +233,7 @@ class ChessBoard(object):
         return black_moves
         
     # ------------------------------------------------------------------------------------ #
-    def is_enemy(self, piece1: str, piece2: str):
+    def is_enemy(self, piece1, piece2):
         piece1 = str(piece1)
         piece2 = str(piece2)
         if piece1.isupper() and piece2.islower():
@@ -300,7 +300,7 @@ class ChessBoard(object):
 
     # ------------------------------------------------------------------------------------ #
 
-    def board_to_fen(self, fen: str):
+    def board_to_fen(self, fen):
         piece_pos = ''
 
         for file in range(len(self.board)):
@@ -330,7 +330,7 @@ class ChessBoard(object):
 
     # ------------------------------------------------------------------------------------ #
 
-    def legal_moves(self, piece: str, x: int, y: int):
+    def legal_moves(self, piece, x, y):
         # white pawn
         moves = []
         if str(piece).lower() == 'p':
@@ -359,7 +359,7 @@ class ChessBoard(object):
 
     # ------------------------------------------------------------------------------------ #
 
-    def pawn_moves(self, piece: str, x: int, y: int):
+    def pawn_moves(self, piece, x, y):
         moves = []
 
         if piece == 'P':
@@ -431,7 +431,7 @@ class ChessBoard(object):
     # ------------------------------------------------------------------------------------ #
     # rook moves
 
-    def rook_moves(self, piece: str, x: int, y: int):
+    def rook_moves(self, piece, x, y):
         moves = []
 
         # upper file
@@ -497,7 +497,7 @@ class ChessBoard(object):
     # ------------------------------------------------------------------------------------ #
     # bishop moves
 
-    def bishop_moves(self, piece: str, x: int, y: int):
+    def bishop_moves(self, piece, x, y):
         moves = []
 
         # upper left diagonal
@@ -570,7 +570,7 @@ class ChessBoard(object):
 
     # ------------------------------------------------------------------------------------ #
 
-    def knight_moves(self, piece: str, x: int, y: int):
+    def knight_moves(self, piece, x, y):
         possible_moves = [
             (x - 1, y - 2),
             (x - 2, y - 1),
@@ -598,7 +598,7 @@ class ChessBoard(object):
     # ------------------------------------------------------------------------------------ #
     # king moves
 
-    def king_moves(self, piece: str, x: int, y: int):
+    def king_moves(self, piece, x, y):
         possible_moves = [
             (x - 1, y - 1),
             (x    , y - 1),
@@ -640,7 +640,7 @@ class ChessBoard(object):
         return moves
     # ------------------------------------------------------------------------------------ #
 
-    def is_legal_move(self, piece: str, piece_pos: tuple, move_pos: tuple):
+    def is_legal_move(self, piece, piece_pos, move_pos):
 
         possible_moves = self.legal_moves(piece, piece_pos[0], piece_pos[1])
         # remove the capture of the kings if present in the list of legal moves.
@@ -653,14 +653,14 @@ class ChessBoard(object):
             
     # ------------------------------------------------------------------------------------ #
 
-    def capture(self, capturing_piece: str, capturing_piece_pos: tuple, piece_to_capture_pos: tuple):
+    def capture(self, capturing_piece, capturing_piece_pos, piece_to_capture_pos):
         piece_to_capture = self.board[piece_to_capture_pos[0]][piece_to_capture_pos[1]]
         self.board[capturing_piece_pos[0]][capturing_piece_pos[1]] = 0
         self.board[piece_to_capture_pos[0]][piece_to_capture_pos[1]] = capturing_piece
 
     # ------------------------------------------------------------------------------------ #     
 
-    def move_piece(self, piece: str, piece_pos: tuple, move_pos: tuple):        
+    def move_piece(self, piece, piece_pos, move_pos):        
         if self.board[move_pos[0]][move_pos[1]] == 0:
 
             if str(self.board[move_pos[0] + 1][move_pos[1]]) == 'p' and piece == 'P':
@@ -682,7 +682,7 @@ class ChessBoard(object):
 
     # ------------------------------------------------------------------------------------ #     
 
-    def check_for_en_passant(self, target_square: tuple):
+    def check_for_en_passant(self, target_square):
         if str(self.active_piece).lower() == 'p':
             if abs(self.active_square[0] - target_square[0]) == 2:
                 self.en_passant_pawn = target_square
@@ -698,7 +698,7 @@ class ChessBoard(object):
                 self.en_passant_pawn = (-1, -1) 
 
     # ------------------------------------------------------------------------------------ #  
-    def check_for_checks(self, target_square: tuple):
+    def check_for_checks(self, target_square):
         for move in self.legal_moves(self.active_piece, target_square[0], target_square[1]):
             if self.active_piece.isupper():
                 if move == self.black_king:
@@ -710,7 +710,7 @@ class ChessBoard(object):
 
     # ------------------------------------------------------------------------------------ #  
 
-    def handle_click_event(self, mouse_button: int):
+    def handle_click_event(self, mouse_button):
         # seeing if the game is still playable and not in 
         # check mate or stale mate state
         if self.playable:
