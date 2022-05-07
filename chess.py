@@ -108,7 +108,7 @@ class Piece():
     p = clip(peice_image, 1666, 333, 333, 333, rez)
 
 
-# ---------------------- PLayer Object ------------------- #
+# ---------------------- Player Object ------------------- #
 class Player(object):
     def __init__(self, color):
         self.color = color
