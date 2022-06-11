@@ -24,7 +24,6 @@
 
 # --------------------------------- required libraries ----------------------------------- #
 
-
 import pygame
 pygame.init()
 
@@ -45,7 +44,7 @@ pygame.display.set_icon(logo)
 
 # ------------------------------ Utitlity Functions -------------------------------------- #
 # Code to clip an image to a sub-image
-def clip(surface, x, y, x_size, y_size, _rez, save=False):
+def clip(surface, x, y, x_size, y_size, _rez, save=False) -> pygame.surface:
     handle_surface = surface.copy()
     clipRect = pygame.Rect(x,y,x_size,y_size)
     handle_surface.set_clip(clipRect)
@@ -61,7 +60,7 @@ def clip(surface, x, y, x_size, y_size, _rez, save=False):
 # ------------------------------- Utitlity Classes --------------------------------------- #
 
 class Mousefunc(object):
-    def get_square():
+    def get_square() -> tuple:
         _y, _x = pygame.mouse.get_pos()
         _x = _x // rez
         _y = _y // rez
@@ -159,7 +158,7 @@ class ChessBoard(object):
         self.en_passant_pawn = None
 
     # ------------------------------------------------------------------------------------ #
-    def piece_color(self, piece):
+    def piece_color(self, piece) -> str:
         piece = str(piece)
         if piece.isupper():
             return "white"
@@ -169,7 +168,7 @@ class ChessBoard(object):
             pass
 
     # ------------------------------------------------------------------------------------ #
-    def refresh(self):
+    def refresh(self) -> None:
 
         for i in range(len(self.board)):
             for j in range(len(self.board[0])):
@@ -200,7 +199,7 @@ class ChessBoard(object):
         self.all_black_moves = self.black_moves()
 
     # ------------------------------------------------------------------------------------ #
-    def white_moves(self, board = None):
+    def white_moves(self, board = None) -> list:
         if board == None:
             board = self.board
 
@@ -217,7 +216,7 @@ class ChessBoard(object):
 
     # ------------------------------------------------------------------------------------ #
 
-    def black_moves(self, board = None):
+    def black_moves(self, board = None) -> list:
         if board == None:
             board = self.board
 
@@ -233,7 +232,7 @@ class ChessBoard(object):
         return black_moves
         
     # ------------------------------------------------------------------------------------ #
-    def is_enemy(self, piece1, piece2):
+    def is_enemy(self, piece1, piece2) -> bool:
         piece1 = str(piece1)
         piece2 = str(piece2)
         if piece1.isupper() and piece2.islower():
@@ -243,7 +242,7 @@ class ChessBoard(object):
         return False
     
     # ------------------------------------------------------------------------------------ #
-    def draw(self):
+    def draw(self) -> None:
 
         for file in range(len(self.board)):
             for rank in range(len(self.board[0])):
@@ -273,7 +272,7 @@ class ChessBoard(object):
         
     
     # ------------------------------------------------------------------------------------ #
-    def fen_to_board(self):
+    def fen_to_board(self) -> list:
         valid = self.fen.count('/') == 7
         if not valid:
             print("[ERROR] : Invalid FEN")
@@ -300,7 +299,7 @@ class ChessBoard(object):
 
     # ------------------------------------------------------------------------------------ #
 
-    def board_to_fen(self, fen):
+    def board_to_fen(self, fen) -> str:
         piece_pos = ''
 
         for file in range(len(self.board)):
@@ -330,36 +329,54 @@ class ChessBoard(object):
 
     # ------------------------------------------------------------------------------------ #
 
-    def legal_moves(self, piece, x, y):
+    def legal_moves(self, piece, x, y) -> list:
         # white pawn
         moves = []
-        if str(piece).lower() == 'p':
-            moves = self.pawn_moves(piece, x, y)
 
-        elif str(piece).lower() == 'k':
-            moves = self.king_moves(piece, x, y)
-        # rook
-        elif str(piece).lower() == 'r':
-            moves = self.rook_moves(piece, x, y)
+        str_piece = str(piece).lower()
 
-        elif str(piece).lower() == 'b':
-            moves = self.bishop_moves(piece, x, y)
+        match str_piece:
+            case 'p':
+                moves = self.pawn_moves(piece, x, y)
+            case 'k':
+                moves = self.king_moves(piece, x, y)
+            case 'r':
+                moves = self.rook_moves(piece, x, y)
+            case 'b':
+                moves = self.bishop_moves(piece, x, y)
+            case 'n':
+                moves = self.knight_moves(piece, x, y)
+            case 'q':
+                moves = self.rook_moves(piece, x, y)
+                moves += self.bishop_moves(piece, x, y)
 
-        elif str(piece).lower() == 'n':
-            moves = self.knight_moves(piece, x, y)
+        # if str(piece).lower() == 'p':
+        #     moves = self.pawn_moves(piece, x, y)
 
-        elif str(piece).lower() == 'q':
-            moves = self.rook_moves(piece, x, y)
-            moves += self.bishop_moves(piece, x, y)
+        # elif str(piece).lower() == 'k':
+        #     moves = self.king_moves(piece, x, y)
+        # # rook
+        # elif str(piece).lower() == 'r':
+        #     moves = self.rook_moves(piece, x, y)
 
-        else:
-            pass
+        # elif str(piece).lower() == 'b':
+        #     moves = self.bishop_moves(piece, x, y)
+
+        # elif str(piece).lower() == 'n':
+        #     moves = self.knight_moves(piece, x, y)
+
+        # elif str(piece).lower() == 'q':
+        #     moves = self.rook_moves(piece, x, y)
+        #     moves += self.bishop_moves(piece, x, y)
+
+        # else:
+        #     pass
 
         return moves
 
     # ------------------------------------------------------------------------------------ #
 
-    def pawn_moves(self, piece, x, y):
+    def pawn_moves(self, piece, x, y) -> list:
         moves = []
 
         if piece == 'P':
@@ -431,7 +448,7 @@ class ChessBoard(object):
     # ------------------------------------------------------------------------------------ #
     # rook moves
 
-    def rook_moves(self, piece, x, y):
+    def rook_moves(self, piece, x, y) -> list:
         moves = []
 
         # upper file
@@ -497,7 +514,7 @@ class ChessBoard(object):
     # ------------------------------------------------------------------------------------ #
     # bishop moves
 
-    def bishop_moves(self, piece, x, y):
+    def bishop_moves(self, piece, x, y) -> list:
         moves = []
 
         # upper left diagonal
@@ -570,7 +587,7 @@ class ChessBoard(object):
 
     # ------------------------------------------------------------------------------------ #
 
-    def knight_moves(self, piece, x, y):
+    def knight_moves(self, piece, x, y) -> list:
         possible_moves = [
             (x - 1, y - 2),
             (x - 2, y - 1),
@@ -598,7 +615,7 @@ class ChessBoard(object):
     # ------------------------------------------------------------------------------------ #
     # king moves
 
-    def king_moves(self, piece, x, y):
+    def king_moves(self, piece, x, y) -> list:
         possible_moves = [
             (x - 1, y - 1),
             (x    , y - 1),
@@ -640,7 +657,7 @@ class ChessBoard(object):
         return moves
     # ------------------------------------------------------------------------------------ #
 
-    def is_legal_move(self, piece, piece_pos, move_pos):
+    def is_legal_move(self, piece, piece_pos, move_pos) -> bool:
 
         possible_moves = self.legal_moves(piece, piece_pos[0], piece_pos[1])
         # remove the capture of the kings if present in the list of legal moves.
@@ -653,14 +670,14 @@ class ChessBoard(object):
             
     # ------------------------------------------------------------------------------------ #
 
-    def capture(self, capturing_piece, capturing_piece_pos, piece_to_capture_pos):
+    def capture(self, capturing_piece, capturing_piece_pos, piece_to_capture_pos) -> None:
         piece_to_capture = self.board[piece_to_capture_pos[0]][piece_to_capture_pos[1]]
         self.board[capturing_piece_pos[0]][capturing_piece_pos[1]] = 0
         self.board[piece_to_capture_pos[0]][piece_to_capture_pos[1]] = capturing_piece
 
     # ------------------------------------------------------------------------------------ #     
 
-    def move_piece(self, piece, piece_pos, move_pos):        
+    def move_piece(self, piece, piece_pos, move_pos) -> None:        
         if self.board[move_pos[0]][move_pos[1]] == 0:
 
             if str(self.board[move_pos[0] + 1][move_pos[1]]) == 'p' and piece == 'P':
@@ -682,7 +699,7 @@ class ChessBoard(object):
 
     # ------------------------------------------------------------------------------------ #     
 
-    def check_for_en_passant(self, target_square):
+    def check_for_en_passant(self, target_square) -> None:
         if str(self.active_piece).lower() == 'p':
             if abs(self.active_square[0] - target_square[0]) == 2:
                 self.en_passant_pawn = target_square
@@ -698,7 +715,7 @@ class ChessBoard(object):
                 self.en_passant_pawn = (-1, -1) 
 
     # ------------------------------------------------------------------------------------ #  
-    def check_for_checks(self, target_square):
+    def check_for_checks(self, target_square) -> None:
         for move in self.legal_moves(self.active_piece, target_square[0], target_square[1]):
             if self.active_piece.isupper():
                 if move == self.black_king:
@@ -710,7 +727,7 @@ class ChessBoard(object):
 
     # ------------------------------------------------------------------------------------ #  
 
-    def handle_click_event(self, mouse_button):
+    def handle_click_event(self, mouse_button) -> None:
         # seeing if the game is still playable and not in 
         # check mate or stale mate state
         if self.playable:
