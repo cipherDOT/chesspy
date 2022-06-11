@@ -13,8 +13,6 @@
 
 # requirements:
 #       [ ] pygame
-#       [ ] sys
-#       [ ] time
 
 # miscellaneous:
 #       [ ] font        - Google Poppins light font  
